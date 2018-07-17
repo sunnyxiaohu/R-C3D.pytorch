@@ -78,7 +78,8 @@ Download them and put them into the data/pretrained_model/.
 
 **If you want to use pytorch pre-trained models, please remember to transpose images from BGR to RGB, and also use the same data transformer (minus mean and normalize) as used in pretrained model.**
 
-### NOTE: the introduction below are not well constructed yet.
+### IMPORTANT NOTES: 
+the introduction below are not well constructed yet.
 
 ### Compilation
 
