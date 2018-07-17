@@ -78,6 +78,8 @@ Download them and put them into the data/pretrained_model/.
 
 **If you want to use pytorch pre-trained models, please remember to transpose images from BGR to RGB, and also use the same data transformer (minus mean and normalize) as used in pretrained model.**
 
+### NOTE: the introduction below are not well constructed yet.
+
 ### Compilation
 
 As pointed out by [ruotianluo/pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn), choose the right `-arch` in `make.sh` file, to compile the cuda code:
