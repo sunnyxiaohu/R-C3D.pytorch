@@ -1,8 +1,8 @@
-# A *Faster* Pytorch Implementation of Faster R-CNN
+# A *Faster* Pytorch Implementation of R-C3D
 
 ## Introduction
 
-This project is a *faster* pytorch implementation of faster R-CNN, aimed to accelerating the training of faster R-CNN object detection models. Recently, there are a number of good implementations:
+This project is a *faster* pytorch implementation of R-C3D, aimed to accelerating the training of R-C3D object detection models. Recently, there are a number of good implementations:
 
 * [rbgirshick/py-faster-rcnn](https://github.com/rbgirshick/py-faster-rcnn), developed based on Pycaffe + Numpy
 
@@ -12,29 +12,17 @@ This project is a *faster* pytorch implementation of faster R-CNN, aimed to acce
 
 * [ruotianluo/pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn), developed based on Pytorch + TensorFlow + Numpy
 
+* [huijuan/R-C3D](https://github.com/VisionLearningGroup/R-C3D)
+
 During our implementing, we referred the above implementations, especailly [longcw/faster_rcnn_pytorch](https://github.com/longcw/faster_rcnn_pytorch). However, our implementation has several unique and new features compared with the above implementations:
 
 * **It is pure Pytorch code**. We convert all the numpy implementations to pytorch!
 
-* **It supports multi-image batch training**. We revise all the layers, including dataloader, rpn, roi-pooling, etc., to support multiple images in each minibatch.
-
 * **It supports multiple GPUs training**. We use a multiple GPU wrapper (nn.DataParallel here) to make it flexible to use one or more GPUs, as a merit of the above two features.
-
-* **It supports three pooling methods**. We integrate three pooling methods: roi pooing, roi align and roi crop. More importantly, we modify all of them to support multi-image batch training.
 
 * **It is memory efficient**. We limit the image aspect ratio, and group images with similar aspect ratios into a minibatch. As such, we can train resnet101 and VGG16 with batchsize = 4 (4 images) on a sigle Titan X (12 GB). When training with 8 GPU, the maximum batchsize for each GPU is 3 (Res101), totally 24.
 
 * **It is faster**. Based on the above modifications, the training is much faster. We report the training speed on NVIDIA TITAN Xp in the tables below.
-
-## Other Implementations
-
-* [Feature Pyramid Network (FPN)](https://github.com/jwyang/fpn.pytorch)
-
-* Mask R-CNN (~~ongoing~~ already implemented by [roytseng-tw](https://github.com/roytseng-tw/mask-rcnn.pytorch))
-
-## Tutorial 
-
-* [Blog](http://www.telesens.co/2018/03/11/object-detection-and-classification-using-r-cnns/) by [ankur6ue](https://github.com/ankur6ue)
 
 ## Benchmarking
 
@@ -124,7 +112,7 @@ It will compile all the modules you need, including NMS, ROI_Pooing, ROI_Align a
 
 Before training, set the right directory to save and load the trained models. Change the arguments "save_dir" and "load_dir" in trainval_net.py and test_net.py to adapt to your environment.
 
-To train a faster R-CNN model with vgg16 on pascal_voc, simply run:
+To train a R-C3D model with vgg16 on pascal_voc, simply run:
 ```
 CUDA_VISIBLE_DEVICES=$GPU_ID python trainval_net.py \
                    --dataset pascal_voc --net vgg16 \
@@ -199,17 +187,17 @@ This project is equally contributed by [Jianwei Yang](https://github.com/jwyang)
 
 ## Citation
 
-    @article{jjfaster2rcnn,
-        Author = {Jianwei Yang and Jiasen Lu and Dhruv Batra and Devi Parikh},
-        Title = {A Faster Pytorch Implementation of Faster R-CNN},
+    @article{swfaster2rc3d,
+        Author = {Shiguang Wang and Jiang Cheng},
+        Title = {A Faster Pytorch Implementation of R-C3D},
         Journal = {https://github.com/jwyang/faster-rcnn.pytorch},
-        Year = {2017}
+        Year = {2018}
     } 
     
-    @inproceedings{renNIPS15fasterrcnn,
-        Author = {Shaoqing Ren and Kaiming He and Ross Girshick and Jian Sun},
-        Title = {Faster {R-CNN}: Towards Real-Time Object Detection
-                 with Region Proposal Networks},
-        Booktitle = {Advances in Neural Information Processing Systems ({NIPS})},
-        Year = {2015}
+    @inproceedings{xu2017r,
+        title={R-C3D: region convolutional 3d network for temporal activity detection},
+        author={Xu, Huijuan and Das, Abir and Saenko, Kate},
+        booktitle={IEEE Int. Conf. on Computer Vision (ICCV)},
+        pages={5794--5803},
+        year={2017}
     }
