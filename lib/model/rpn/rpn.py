@@ -39,9 +39,6 @@ class _RPN(nn.Module):
         # define anchor twin offset prediction layer
         self.nc_twin_out = len(self.anchor_scales) * 2 # 2(coords) * 10 (anchors)
         self.RPN_twin_pred = nn.Conv3d(512, self.nc_twin_out, 1, 1, 0)
-        
-        # define mask segmentation layer
-        self.RPN_mask_conv = nn.Conv3d(512, 128, 1, 1, 0)
 
         # define proposal layer
         self.RPN_proposal = _ProposalLayer(self.feat_stride, self.anchor_scales, self.out_scores)
@@ -87,10 +84,6 @@ class _RPN(nn.Module):
         rpn_twin_pred = self.RPN_twin_pred(rpn_output_pool)
         #print("rpn_twin_pred: {}".format(rpn_twin_pred.shape))
 
-        # get rpn mask pred , TODO: unsample ratio
-        if cfg.RPN_HAS_MASK:
-            rpn_mask_pred = F.sigmoid(rpn_output_pool.mean(4).mean(3).mean(1)) #(1, 96)
-
         # proposal layer
         cfg_key = 'TRAIN' if self.training else 'TEST'
 
@@ -133,18 +126,6 @@ class _RPN(nn.Module):
 
             self.rpn_loss_twin = _smooth_l1_loss(rpn_twin_pred, rpn_twin_targets, rpn_twin_inside_weights,
                                                             rpn_twin_outside_weights, sigma=3, dim=[1,2,3,4])
-
-            if cfg.RPN_HAS_MASK:
-                # prepare mask label for mask segmentation task
-                masks_label = self.generate_mask_label(gt_twins, rpn_mask_pred.size(1))
-                self.rpn_loss_mask = mask_rpn_losses(rpn_mask_pred, Variable(masks_label))
-                if DEBUG:
-                    num_mask_fg = torch.nonzero(masks_label.view(-1).eq(1)).numel()
-                    num_mask_bg = torch.nonzero(masks_label.view(-1).eq(0)).numel()
-                    num_mask_ignore = torch.nonzero(masks_label.view(-1).eq(-1)).numel()
-                    print("rpn_mask_fg: {}, rpn_mask_bg: {}, rpn_mask_ignore: {}".format( \
-                        num_mask_fg, num_mask_bg, num_mask_ignore))
-
 
         if self.out_scores:
             return rois, rois_score, rpn_cls_prob, rpn_twin_pred, self.rpn_loss_cls, self.rpn_loss_twin, self.rpn_label, self.rpn_loss_mask

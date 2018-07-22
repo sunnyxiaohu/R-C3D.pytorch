@@ -17,10 +17,9 @@ import pdb
 import time
 import pickle
 import torch
-from torch.autograd import Variable
 import torch.nn as nn
 import torch.optim as optim
-
+import torch.backends.cudnn as cudnn
 import torchvision.transforms as transforms
 from torch.utils.data.sampler import Sampler
 
@@ -177,7 +176,7 @@ if __name__ == '__main__':
   pprint.pprint(cfg)
   np.random.seed(cfg.RNG_SEED)
 
-  #torch.backends.cudnn.benchmark = True
+  cudnn.benchmark = True
   if torch.cuda.is_available() and not args.cuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
@@ -201,10 +200,6 @@ if __name__ == '__main__':
 
   dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size,
                             sampler=sampler_batch, num_workers=args.num_workers)
-
-  # initilize the tensor holder here.
-  #video_data = torch.FloatTensor(1) #torch.FloatTensor(1, 3, 768, 112, 112)
-  #gt_twins = torch.FloatTensor(1)
 
   device = torch.device("cuda:0" if args.cuda else "cpu")
 

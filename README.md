@@ -31,8 +31,8 @@ We benchmark our code thoroughly on three datasets: pascal voc, coco and imagene
 ### What we are going to do
 
 - [x] Support both python2 and python3 (great thanks to [cclauss](https://github.com/cclauss)).
-- [ ] Add deformable pooling layer as an alternative way for roi pooling (mainly supported by [Xander](https://github.com/xanderchf))
-- [ ] ~~Run systematical experiments on PASCAL VOC 07/12, COCO, ImageNet, Visual Genome (VG) with different settings.~~
+- [ ] Add other main network support (i3d, resnet-3d)
+- [ ] ~~Run systematical experiments on ActivityNet.~~
 - [ ] ~~Write a detailed report about the new stuffs in our implementations, and the quantitative results in our experiments.~~
 
 ## Preparation 
@@ -107,9 +107,12 @@ cd lib
 sh make.sh
 ```
 
-It will compile all the modules you need, including NMS, ROI_Pooing, ROI_Align and ROI_Crop. The default version is compiled with Python 2.7, please compile by yourself if you are using a different python version.
+It will compile all the modules you need, including NMS, ROI_Temporal_Pooing. The default version is compiled with Python 3.6, please compile by yourself if you are using a different python version.
 
 **As pointed out in this [issue](https://github.com/jwyang/faster-rcnn.pytorch/issues/16), if you encounter some error during the compilation, you might miss to export the CUDA paths to your environment.**
+
+## Pretrained-models
+You have to convert the pretrained caffemodels to pytorch first.
 
 ## Train 
 
@@ -118,52 +121,34 @@ Before training, set the right directory to save and load the trained models. Ch
 To train a R-C3D model with vgg16 on pascal_voc, simply run:
 ```
 CUDA_VISIBLE_DEVICES=$GPU_ID python trainval_net.py \
-                   --dataset pascal_voc --net vgg16 \
+                   --dataset thumos14 --net c3d \
                    --bs $BATCH_SIZE --nw $WORKER_NUMBER \
                    --lr $LEARNING_RATE --lr_decay_step $DECAY_STEP \
                    --cuda
 ```
-where 'bs' is the batch size with default 1. Alternatively, to train with resnet101 on pascal_voc, simple run:
-```
- CUDA_VISIBLE_DEVICES=$GPU_ID python trainval_net.py \
-                    --dataset pascal_voc --net res101 \
-                    --bs $BATCH_SIZE --nw $WORKER_NUMBER \
-                    --lr $LEARNING_RATE --lr_decay_step $DECAY_STEP \
-                    --cuda
-```
-Above, BATCH_SIZE and WORKER_NUMBER can be set adaptively according to your GPU memory size. **On Titan Xp with 12G memory, it can be up to 4**.
+where 'bs' is the batch size with default 1.
+Above, BATCH_SIZE and WORKER_NUMBER can be set adaptively according to your GPU memory size.
 
-If you have multiple (say 8) Titan Xp GPUs, then just use them all! Try:
+~~ For multiple GPUs (not test yet.)  Try: ~~
 ```
-python trainval_net.py --dataset pascal_voc --net vgg16 \
+python trainval_net.py --dataset thumos14 --net c3d \
                        --bs 24 --nw 8 \
                        --lr $LEARNING_RATE --lr_decay_step $DECAY_STEP \
                        --cuda --mGPUs
-
 ```
 
-Change dataset to "coco" or 'vg' if you want to train on COCO or Visual Genome.
+Change dataset to "activivity" or 'charades' if you want to train on ActivityNet or Charades.
 
 ## Test
 
-If you want to evlauate the detection performance of a pre-trained vgg16 model on pascal_voc test set, simply run
+If you want to evlauate the detection performance of a pre-trained c3d model on thumos14 test set, simply run
 ```
-python test_net.py --dataset pascal_voc --net vgg16 \
+python test_net.py --dataset thumos14 --net c3d \
                    --checksession $SESSION --checkepoch $EPOCH --checkpoint $CHECKPOINT \
                    --cuda
 ```
-Specify the specific model session, chechepoch and checkpoint, e.g., SESSION=1, EPOCH=6, CHECKPOINT=416.
+Specify the specific model session, chechepoch and checkpoint, e.g., SESSION=1, EPOCH=3, CHECKPOINT=13711.
 
-## Demo
-
-If you want to run detection on your own images with a pre-trained model, download the pretrained model listed in above tables or train your own models at first, then add images to folder $ROOT/images, and then run
-```
-python demo.py --net vgg16 \
-               --checksession $SESSION --checkepoch $EPOCH --checkpoint $CHECKPOINT \
-               --cuda --load_dir path/to/model/directoy
-```
-
-Then you will find the detection results in folder $ROOT/images. 
 
 **Note the default demo.py merely support pascal_voc categories. You need to change the [line](https://github.com/jwyang/faster-rcnn.pytorch/blob/530f3fdccaa60d05fa068bc2148695211586bd88/demo.py#L156) to adapt your own model.**
 
