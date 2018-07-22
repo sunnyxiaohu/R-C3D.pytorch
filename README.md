@@ -149,29 +149,9 @@ python test_net.py --dataset thumos14 --net c3d \
 ```
 Specify the specific model session, chechepoch and checkpoint, e.g., SESSION=1, EPOCH=3, CHECKPOINT=13711.
 
-
-**Note the default demo.py merely support pascal_voc categories. You need to change the [line](https://github.com/jwyang/faster-rcnn.pytorch/blob/530f3fdccaa60d05fa068bc2148695211586bd88/demo.py#L156) to adapt your own model.**
-
-Below are some detection results:
-
-<div style="color:#0000FF" align="center">
-<img src="images/img3_det_res101.jpg" width="430"/> <img src="images/img4_det_res101.jpg" width="430"/>
-</div>
-
-## Webcam Demo
-
-You can use a webcam in a real-time demo by running
-```
-python demo.py --net vgg16 \
-               --checksession $SESSION --checkepoch $EPOCH --checkpoint $CHECKPOINT \
-               --cuda --load_dir path/to/model/directoy \
-               --webcam $WEBCAM_ID
-```
-The demo is stopped by clicking the image window and then pressing the 'q' key.
-
 ## Authorship
 
-This project is equally contributed by [Jianwei Yang](https://github.com/jwyang) and [Jiasen Lu](https://github.com/jiasenlu), and many others (thanks to them!).
+This project is equally contributed by [Shiguang Wang](https://github.com/sunnxiaohu.git), and many others (thanks to them!).
 
 ## Citation
 
