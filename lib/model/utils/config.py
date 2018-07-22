@@ -293,9 +293,9 @@ __C.GPU_ID = 0
 __C.POOLING_MODE = 'pool'
 
 # Size of the pooled region after RoI pooling
-__C.POOLING_LENGTH = 16
-__C.POOLING_HEIGHT = 1
-__C.POOLING_WIDTH = 1
+__C.POOLING_LENGTH = 4
+__C.POOLING_HEIGHT = 2
+__C.POOLING_WIDTH = 2
 
 # Maximal number of gt rois in an image during Training
 __C.MAX_NUM_GT_TWINS = 20
