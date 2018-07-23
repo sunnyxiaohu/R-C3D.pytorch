@@ -59,10 +59,10 @@ class C3D(nn.Module):
         self.classifier = nn.Sequential(
             nn.Linear(512*1*4*4, 4096),
             nn.ReLU(True),
-            nn.Dropout(inplace=True),
+            nn.Dropout(inplace=False),
             nn.Linear(4096, 4096),
             nn.ReLU(True),
-            nn.Dropout(inplace=True),
+            nn.Dropout(inplace=False),
             nn.Linear(4096, 487),
         )
         self._initialize_weights()
@@ -76,7 +76,7 @@ class C3D(nn.Module):
 
 class c3d_tdcnn(_TDCNN):
     def __init__(self, class_agnostic=False, pretrained=False):
-        self.model_path = 'data/pretrained_model/activitynet_iter_30000_3fps-caffe.pth' #c3d_sports1M.pth'
+        self.model_path = 'data/pretrained_model/ucf101-caffe.pth' #c3d_sports1M.pth'
         self.dout_base_model = 512
         self.pretrained = pretrained
         _TDCNN.__init__(self, class_agnostic)
