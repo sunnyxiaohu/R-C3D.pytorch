@@ -113,6 +113,7 @@ It will compile all the modules you need, including NMS, ROI_Temporal_Pooing. Th
 
 ## Pretrained-models
 You have to convert the pretrained caffemodels to pytorch first.
+Here, I converted the pretrained model of C3D to pytorch format, and you can found below in BaiduYun(https://pan.baidu.com/s/1saNqGBkzZHwZpG-A5RDLVw)
 
 ## Train 
 
