@@ -74,7 +74,8 @@ We used two pretrained models in our experiments, VGG and ResNet101. You can dow
 * C3D: ucf101-caffe.pth
 Download them and put them into the data/pretrained_model/.
 
-**NOTE**. We compare the pretrained models from Pytorch and Caffe, and surprisingly find Caffe pretrained models have slightly better performance than Pytorch pretrained. We would suggest to use Caffe pretrained models from the above link to reproduce our results. 
+**NOTE**. We would suggest to use Caffe pretrained models from the above link to reproduce our results. 
+You can found the converted pretrained model in [BaiduYun](https://pan.baidu.com/s/1saNqGBkzZHwZpG-A5RDLVw)
 
 **If you want to use pytorch pre-trained models, please remember to transpose images from BGR to RGB, and also use the same data transformer (minus mean and normalize) as used in pretrained model.**
 
@@ -110,10 +111,6 @@ sh make.sh
 It will compile all the modules you need, including NMS, ROI_Temporal_Pooing. The default version is compiled with Python 3.6, please compile by yourself if you are using a different python version.
 
 **As pointed out in this [issue](https://github.com/jwyang/faster-rcnn.pytorch/issues/16), if you encounter some error during the compilation, you might miss to export the CUDA paths to your environment.**
-
-## Pretrained-models
-You have to convert the pretrained caffemodels to pytorch first.
-Here, I converted the pretrained model of C3D to pytorch format, and you can found below in BaiduYun(https://pan.baidu.com/s/1saNqGBkzZHwZpG-A5RDLVw)
 
 ## Train 
 
