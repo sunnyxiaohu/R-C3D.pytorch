@@ -30,7 +30,7 @@ We benchmark our code thoroughly on three datasets: pascal voc, coco and imagene
 
 ### What we are going to do
 
-- [x] Support both python2 and python3 (great thanks to [cclauss](https://github.com/cclauss)).
+- [ ] Support both python2 and python3 (great thanks to [cclauss](https://github.com/cclauss)).
 - [ ] Add other main network support (i3d, resnet-3d)
 - [ ] ~~Run systematical experiments on ActivityNet.~~
 - [ ] ~~Write a detailed report about the new stuffs in our implementations, and the quantitative results in our experiments.~~

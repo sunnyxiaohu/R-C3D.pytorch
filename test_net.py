@@ -172,11 +172,12 @@ if __name__ == '__main__':
       args.imdb_name = "train_data_25fps_flipped.pkl"
       args.imdbval_name = "val_data_25fps.pkl"
       args.num_classes = 2 if cfg.AGNOSTIC else 21
-      args.set_cfgs = ['ANCHOR_SCALES', '[2,4,5,6,8,9,10,12,14,16]', 'MAX_NUM_GT_TWINS', '20']
-  elif args.dataset == "pascal_voc_0712":
-      args.imdb_name = "voc_2007_trainval+voc_2012_trainval"
-      args.imdbval_name = "voc_2007_test"
-      args.set_cfgs = ['ANCHOR_SCALES', '[2,4,5,6,8,9,10,12,14,16]', 'MAX_NUM_GT_TWINS', '20']
+      args.set_cfgs = ['ANCHOR_SCALES', '[2,4,5,6,8,9,10,12,14,16]', 'MAX_NUM_GT_TWINS', '20', 'NUM_CLASSES', args.num_classes]
+  elif args.dataset == "activitynet":
+      args.imdb_name = "train_data_3fps_flipped.pkl"
+      args.imdbval_name = "val_data_3fps.pkl"
+      args.num_classes = 2 if cfg.AGNOSTIC else 201
+      args.set_cfgs = ['ANCHOR_SCALES', '[1,2,3,4,5,6,7,8,10,12,14,16,20,24,28,32,40,48,56,64]', 'MAX_NUM_GT_TWINS', '20', 'NUM_CLASSES', args.num_classes]  
 
   args.cfg_file = "cfgs/{}.yml".format(args.net)
 
@@ -184,11 +185,13 @@ if __name__ == '__main__':
     cfg_from_file(args.cfg_file)
   if args.set_cfgs is not None:
     cfg_from_list(args.set_cfgs)
-
+    
+  cfg.USE_GPU_NMS = args.cuda
+  cfg.CUDA = args.cuda
+  
   print('Using config:')
   pprint.pprint(cfg)  
 
-  cfg.USE_GPU_NMS = args.cuda
   roidb_path = args.roidb_dir + "/" + args.dataset + "/" + args.imdbval_name
   roidb = get_roidb(roidb_path)
   cfg.TRAIN.USE_FLIPPED = False
@@ -228,7 +231,6 @@ if __name__ == '__main__':
   device = torch.device("cuda:0" if args.cuda else "cpu")
   
   if args.cuda:
-    cfg.CUDA = True
     tdcnn_demo = tdcnn_demo.to(device)
 
   start = time.time()
