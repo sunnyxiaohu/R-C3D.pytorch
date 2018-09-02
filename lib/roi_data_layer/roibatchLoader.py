@@ -18,9 +18,9 @@ import time
 import pdb
 
 class roibatchLoader(data.Dataset):
-  def __init__(self, roidb, num_classes, normalize=None):
+  def __init__(self, roidb, normalize=None):
     self._roidb = roidb
-    self._num_classes = num_classes
+    #self._num_classes = num_classes
     self.normalize = normalize
     # self.batch_size = batch_size
 
@@ -29,7 +29,7 @@ class roibatchLoader(data.Dataset):
     # here we set the anchor index to the last one
     # sample in this group
     minibatch_db = [self._roidb[index]]
-    blobs = get_minibatch(minibatch_db, self._num_classes)
+    blobs = get_minibatch(minibatch_db)
     data = torch.from_numpy(blobs['data'])
     length, height, width = data.size(-3), data.size(-2), data.size(-1)
     data = data.contiguous().view(3, length, height, width)

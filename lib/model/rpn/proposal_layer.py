@@ -33,7 +33,7 @@ class _ProposalLayer(nn.Module):
         super(_ProposalLayer, self).__init__()
 
         self._feat_stride = feat_stride
-        self._anchors = torch.from_numpy(generate_anchors(scales=np.array(scales))).float()
+        self._anchors = torch.from_numpy(generate_anchors(base_size=feat_stride, scales=np.array(scales))).float()
         self._num_anchors = self._anchors.size(0)
         self._out_scores = out_scores
         # TODO: add scale_ratio for video_len ??

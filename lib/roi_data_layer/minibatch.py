@@ -23,7 +23,7 @@ import pdb
 
 DEBUG = False
 
-def get_minibatch(roidb, num_classes):
+def get_minibatch(roidb):
     """Given a roidb, construct a minibatch sampled from it."""
     num_videos = len(roidb)
     # Sample random scales to use for each video in this batch
@@ -45,9 +45,6 @@ def get_minibatch(roidb, num_classes):
     else: # not using RPN
         raise NotImplementedError
 
-    if cfg.AGNOSTIC:
-        blobs['gt_windows'][:, -1] = 1
-
     return blobs
 
 def _get_video_blob(roidb, scale_inds):
@@ -61,7 +58,6 @@ def _get_video_blob(roidb, scale_inds):
       video_length = cfg.TRAIN.LENGTH[scale_inds[0]]  
       video = np.zeros((video_length, cfg.TRAIN.CROP_SIZE,
                         cfg.TRAIN.CROP_SIZE, 3))
-      #if cfg.INPUT == 'video':
       j = 0
       #random_idx = [np.random.randint(cfg.TRAIN.FRAME_SIZE[1]-cfg.TRAIN.CROP_SIZE),
       #                np.random.randint(cfg.TRAIN.FRAME_SIZE[0]-cfg.TRAIN.CROP_SIZE)]

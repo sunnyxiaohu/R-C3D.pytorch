@@ -263,7 +263,7 @@ def resnet200(**kwargs):
     return model
 
 class resnet_tdcnn(_TDCNN):
-    def __init__(self, depth=34, class_agnostic=False, pretrained=False):
+    def __init__(self, depth=34, pretrained=False):
         self.model_path = '/home/agwang/Deeplearning/pytorch_dir/pretrainedmodels/resnet-34-kinetics-cpu.pth'
         self.pretrained = pretrained
         self.depth = depth
@@ -271,7 +271,7 @@ class resnet_tdcnn(_TDCNN):
         self.dout_base_model = 256 if depth in [18, 34] else 1024
         self.model_path = '/home/agwang/Deeplearning/pytorch_dir/pretrainedmodels/resnet-{}-kinetics.pth'.format(depth)
         self.dout_top_model = 512 if depth in [18, 34] else 2048
-        _TDCNN.__init__(self, class_agnostic)
+        _TDCNN.__init__(self)
 
     def _init_modules(self):
         net_str = "resnet{}(sample_size=112, sample_duration=768, shortcut_type=\'{}\')".format(self.depth, self.shortcut_type)

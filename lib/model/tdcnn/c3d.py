@@ -75,11 +75,11 @@ class C3D(nn.Module):
 
 
 class c3d_tdcnn(_TDCNN):
-    def __init__(self, class_agnostic=False, pretrained=False):
-        self.model_path = 'data/pretrained_model/ucf101-caffe.pth' #c3d_sports1M.pth'
+    def __init__(self, pretrained=False):
+        self.model_path = 'data/pretrained_model/activitynet_iter_30000_3fps-caffe.pth' #ucf101-caffe.pth' #c3d_sports1M.pth'
         self.dout_base_model = 512
         self.pretrained = pretrained
-        _TDCNN.__init__(self, class_agnostic)
+        _TDCNN.__init__(self)
 
     def _init_modules(self):
         c3d = C3D()

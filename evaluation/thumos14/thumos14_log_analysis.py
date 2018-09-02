@@ -35,7 +35,7 @@ def nms(dets, thresh=0.4):
         order = order[inds + 1]
     return keep
 
-FRAME_DIR = '/media/agwang/03c94b1e-c46c-4c7b-8d3f-47e316fdee74/home/ksnzh/Videos/action-datasets/THUMOS14'
+FRAME_DIR = '/media/agwang/Data1/action-datasets/THUMOS14'
 META_DIR = os.path.join(FRAME_DIR, 'annotation_')
 
 def generate_classes(meta_dir, split, use_ambiguous=False):
@@ -133,7 +133,7 @@ segmentations = analysis_log(logfile, thresh = 0.005)
 
 def select_top(segmentations, nms_thresh=0.99999, num_cls=0, topk=0):
   res = {}
-  for vid, vinfo in segmentations.iteritems():
+  for vid, vinfo in segmentations.items():
     # select most likely classes
     if num_cls > 0:
       ave_scores = np.zeros(21)
@@ -165,7 +165,7 @@ segmentations = select_top(segmentations, nms_thresh=0.4, topk=200)
 res = {'version': 'VERSION 1.3', 
        'external_data': {'used': True, 'details': 'C3D pre-trained on activity-1.3 training set'},
        'results': {}}
-for vid, vinfo in segmentations.iteritems():
+for vid, vinfo in segmentations.items():
   res['results'][vid] = vinfo
 
 
@@ -173,6 +173,6 @@ with open('results.json', 'w') as outfile:
   json.dump(res, outfile)
 
 with open('tmp.txt', 'w') as outfile:
-  for vid, vinfo in segmentations.iteritems():
+  for vid, vinfo in segmentations.items():
     for seg in vinfo:
       outfile.write("{} {} {} {} {}\n".format(vid, seg['segment'][0], seg['segment'][1], int(seg['label']) ,seg['score']))

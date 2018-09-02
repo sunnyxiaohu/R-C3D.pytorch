@@ -18,11 +18,10 @@ DEBUG = False
 
 class _TDCNN(nn.Module):
     """ faster RCNN """
-    def __init__(self, class_agnostic):
+    def __init__(self):
         super(_TDCNN, self).__init__()
         #self.classes = classes
-        self.class_agnostic = class_agnostic
-        self.n_classes = 2 if class_agnostic else cfg.NUM_CLASSES
+        self.n_classes = cfg.NUM_CLASSES
         # loss
         self.RCNN_loss_cls = 0
         self.RCNN_loss_twin = 0
@@ -70,7 +69,7 @@ class _TDCNN(nn.Module):
         pooled_feat = self._head_to_tail(pooled_feat)
         # compute twin offset
         twin_pred = self.RCNN_twin_pred(pooled_feat)
-        if self.training and not self.class_agnostic:
+        if self.training:
             # select the corresponding columns according to roi labels
             twin_pred_view = twin_pred.view(twin_pred.size(0), int(twin_pred.size(1) / 2), 2)
             twin_pred_select = torch.gather(twin_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 2))

@@ -62,7 +62,7 @@ def parse_args():
                       nargs=argparse.REMAINDER)
   parser.add_argument('--nw', dest='num_workers',
                       help='number of worker to load data',
-                      default=0, type=int)
+                      default=4, type=int)
   parser.add_argument('--cuda', dest='cuda',
                       help='whether use CUDA',
                       action='store_true')                     
@@ -162,11 +162,21 @@ if __name__ == '__main__':
   if args.dataset == "thumos14":
       args.imdb_name = "train_data_25fps_flipped.pkl"
       args.imdbval_name = "val_data_25fps.pkl"
-      args.num_classes = 2 if cfg.AGNOSTIC else 21
-      args.set_cfgs = ['ANCHOR_SCALES', '[2,4,5,6,8,9,10,12,14,16]', 'MAX_NUM_GT_TWINS', '20']
+      args.num_classes = 21
+      args.set_cfgs = ['ANCHOR_SCALES', '[2,4,5,6,8,9,10,12,14,16]', 'MAX_NUM_GT_TWINS', '20', 'NUM_CLASSES', args.num_classes]
+  elif args.dataset == "activitynet":
+      args.imdb_name = "train_data_5fps_flipped.pkl"
+      args.imdbval_name = "val_data_5fps.pkl"
+      args.num_classes = 201
+      args.set_cfgs = ['ANCHOR_SCALES', '[1,2,3,4,5,6,7,8,10,12,14,16,20,24,28,32,40,48,56,64]', 'MAX_NUM_GT_TWINS', '20', 'NUM_CLASSES', args.num_classes]      
 
   args.cfg_file = "cfgs/{}.yml".format(args.net)
-
+  
+  cfg.CUDA = cfg.CUDA
+  cfg.USE_GPU_NMS = args.cuda
+  # -- Note: Use validation set and disable the flipped to enable faster loading.
+  cfg.TRAIN.USE_FLIPPED = True
+  
   if args.cfg_file is not None:
     cfg_from_file(args.cfg_file)
   if args.set_cfgs is not None:
@@ -174,16 +184,18 @@ if __name__ == '__main__':
 
   print('Using config:')
   pprint.pprint(cfg)
+  
+  # for reproduce
   np.random.seed(cfg.RNG_SEED)
+  torch.manual_seed(cfg.RNG_SEED)
+  if args.cuda:
+    torch.cuda.manual_seed_all(cfg.RNG_SEED)
 
   cudnn.benchmark = True
   if torch.cuda.is_available() and not args.cuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
   # train set
-  # -- Note: Use validation set and disable the flipped to enable faster loading.
-  cfg.TRAIN.USE_FLIPPED = True
-  cfg.USE_GPU_NMS = args.cuda
   roidb_path = args.roidb_dir + "/" + args.dataset + "/" + args.imdb_name
   roidb = get_roidb(roidb_path)
   train_size = len(roidb)
@@ -196,32 +208,30 @@ if __name__ == '__main__':
 
   sampler_batch = sampler(train_size, args.batch_size)
 
-  dataset = roibatchLoader(roidb, args.num_classes)
+  dataset = roibatchLoader(roidb)
 
   dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size,
                             sampler=sampler_batch, num_workers=args.num_workers)
 
   device = torch.device("cuda:0" if args.cuda else "cpu")
 
-  if args.cuda:
-    cfg.CUDA = True
-
   # initilize the network here.
   if args.net == 'c3d':
-    tdcnn_demo = c3d_tdcnn(class_agnostic=cfg.AGNOSTIC, pretrained=True)
+    tdcnn_demo = c3d_tdcnn(pretrained=True)
   elif args.net == 'i3d':
-    tdcnn_demo = i3d_tdcnn(class_agnostic=cfg.AGNOSTIC, pretrained=True)
+    tdcnn_demo = i3d_tdcnn(pretrained=True)
   elif args.net == 'res34':
-    tdcnn_demo = resnet_tdcnn(depth=34, class_agnostic=cfg.AGNOSTIC, pretrained=True)
+    tdcnn_demo = resnet_tdcnn(depth=34, pretrained=True)
   elif args.net == 'res50':
-    tdcnn_demo = resnet_tdcnn(depth=50, class_agnostic=cfg.AGNOSTIC, pretrained=True)
+    tdcnn_demo = resnet_tdcnn(depth=50, pretrained=True)
   else:
     print("network is not defined")
     pdb.set_trace()
 
   tdcnn_demo.create_architecture()
-
-  lr = cfg.TRAIN.LEARNING_RATE
+  print(tdcnn_demo)
+  
+  lr = args.lr
   #tr_momentum = cfg.TRAIN.MOMENTUM
   #tr_momentum = args.momentum
 
@@ -273,12 +283,7 @@ if __name__ == '__main__':
         adjust_learning_rate(optimizer, args.lr_decay_gamma)
         lr *= args.lr_decay_gamma
 
-    #data_iter = iter(dataloader)
     for step, (video_data, gt_twins) in enumerate(dataloader):
-      #data = next(data_iter)
-      #video_data = data[0]
-      #video_data.data.resize_(data[0].size()).copy_(data[0])
-      #gt_twins.data.resize_(data[1].size()).copy_(data[1])
       video_data = video_data.to(device)
       gt_twins = gt_twins.to(device)
       
@@ -336,8 +341,7 @@ if __name__ == '__main__':
         'epoch': epoch + 1,
         'model': tdcnn_demo.module.state_dict(),
         'optimizer': optimizer.state_dict(),
-        'pooling_mode': cfg.POOLING_MODE,
-        'class_agnostic': cfg.AGNOSTIC,
+        'pooling_mode': cfg.POOLING_MODE
       }, save_name)
     else:
       save_name = os.path.join(output_dir, 'tdcnn_{}_{}_{}.pth'.format(args.session, epoch, step))
@@ -346,8 +350,7 @@ if __name__ == '__main__':
         'epoch': epoch + 1,
         'model': tdcnn_demo.state_dict(),
         'optimizer': optimizer.state_dict(),
-        'pooling_mode': cfg.POOLING_MODE,
-        'class_agnostic': cfg.AGNOSTIC,
+        'pooling_mode': cfg.POOLING_MODE
       }, save_name)
     print('save model: {}'.format(save_name))
 

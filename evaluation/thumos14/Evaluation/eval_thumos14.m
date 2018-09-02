@@ -30,12 +30,12 @@ for index = 1:length(test_thresholds)
     threshold = test_thresholds(index);
     [videonames,t1,t2,clsid,conf]=textread(detfilename,'%s%f%f%d%f');
     %step1: For multilabel: assign all CliffDiving label for Diving label
-    cliffDiving = clsid==5;
-    videonames = [videonames; videonames(cliffDiving)];
-    t1 = [t1; t1(cliffDiving)];
-    t2 = [t2; t2(cliffDiving)];
-    clsid = [clsid; 8*ones(sum(cliffDiving),1)];
-    conf = [conf; conf(cliffDiving)];
+    %cliffDiving = clsid==5;
+    %videonames = [videonames; videonames(cliffDiving)];
+    %t1 = [t1; t1(cliffDiving)];
+    %t2 = [t2; t2(cliffDiving)];
+    %clsid = [clsid; 8*ones(sum(cliffDiving),1)];
+    %conf = [conf; conf(cliffDiving)];
     %step2: Fillter confidence lower than the threshold
     confid = conf>0.005; % visualize thresh0.6
     videonames = videonames(confid);

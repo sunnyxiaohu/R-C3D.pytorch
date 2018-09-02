@@ -242,9 +242,6 @@ __C.MOBILENET.DEPTH_MULTIPLIER = 1.
 # MISC
 #
 
-# Whether to use agnostic ground-truth (differ from r-fcn that is only agnostic for bbox)
-__C.AGNOSTIC=False
-
 __C.INPUT = 'frames'
 
 # Num classes for action detection dataset

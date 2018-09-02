@@ -35,6 +35,9 @@ from model.tdcnn.resnet import resnet34, resnet50, resnet_tdcnn
 
 import pdb
 
+#np.set_printoptions(threshold='nan')
+DEBUG=False
+
 try:
     xrange          # Python 2
 except NameError:
@@ -95,7 +98,7 @@ def get_roidb(path):
     data = pickle.load(open(path, 'rb'))
     return data
 
-def _get_video_blob(roidb):
+def get_video_blob(roidb):
     """Builds an input blob from the videos in the roidb at the specified
     scales.
     """
@@ -112,38 +115,25 @@ def _get_video_blob(roidb):
     j = 0
     random_idx = [int((cfg.TRAIN.FRAME_SIZE[1]-cfg.TRAIN.CROP_SIZE) / 2), 
                       int((cfg.TRAIN.FRAME_SIZE[0]-cfg.TRAIN.CROP_SIZE) / 2)]
-    if cfg.INPUT == 'video':
-      for video_info in item['frames']:
-          prefix = item['fg_name'] if video_info[0] else item['bg_name']
-          for idx in xrange(video_info[1], video_info[2], video_info[3]):
-            frame = cv2.imread('%s/image_%s.jpg'%(prefix,str(idx+1).zfill(5)))
-            frame = prep_im_for_blob(frame, cfg.PIXEL_MEANS, tuple(cfg.TRAIN.FRAME_SIZE[::-1]),
-                                     cfg.TRAIN.CROP_SIZE, random_idx)
 
-            if item['flipped']:
-                frame = frame[:, ::-1, :]
+    for video_info in item['frames']:
+      step = video_info[3] if cfg.INPUT=='video' else 1
+      prefix = item['fg_name'] if video_info[0] else item['bg_name']
+      for idx in xrange(video_info[1], video_info[2], step):
+        frame = cv2.imread('%s/image_%s.jpg'%(prefix,str(idx+1).zfill(5)))
+        frame = prep_im_for_blob(frame, cfg.PIXEL_MEANS, tuple(cfg.TRAIN.FRAME_SIZE[::-1]),
+                                 cfg.TRAIN.CROP_SIZE, random_idx)
 
-            video[j] = frame
-            j = j + 1
+        if item['flipped']:
+            frame = frame[:, ::-1, :]
 
-    else:
-        for video_info in item['frames']:
-          prefix = item['fg_name'] if video_info[0] else item['bg_name']
-          for idx in xrange(video_info[1], video_info[2]):
-            frame = cv2.imread('%s/image_%s.jpg'%(prefix,str(idx+1).zfill(5)))
-            frame = prep_im_for_blob(frame, cfg.PIXEL_MEANS, tuple(cfg.TRAIN.FRAME_SIZE[::-1]),
-                                     cfg.TRAIN.CROP_SIZE, random_idx)
-
-            if item['flipped']:
-                frame = frame[:, ::-1, :]
-
-            if DEBUG:
-              cv2.imshow('frame', frame/255.0)
-              cv2.waitKey(0)
-              cv2.destroyAllWindows()
-
-            video[j] = frame
-            j = j + 1
+        if DEBUG:
+          cv2.imshow('frame', frame/255.0)
+          cv2.waitKey(0)
+          cv2.destroyAllWindows()
+          
+        video[j] = frame
+        j = j + 1
     
     # padding for the same length
     while ( j < video_length):
@@ -169,15 +159,15 @@ if __name__ == '__main__':
 
   np.random.seed(cfg.RNG_SEED)
   if args.dataset == "thumos14":
-      args.imdb_name = "train_data_25fps_flipped.pkl"
+      #args.imdb_name = "train_data_25fps_flipped.pkl"
       args.imdbval_name = "val_data_25fps.pkl"
-      args.num_classes = 2 if cfg.AGNOSTIC else 21
+      args.num_classes = 21
       args.set_cfgs = ['ANCHOR_SCALES', '[2,4,5,6,8,9,10,12,14,16]', 'MAX_NUM_GT_TWINS', '20', 'NUM_CLASSES', args.num_classes]
   elif args.dataset == "activitynet":
-      args.imdb_name = "train_data_3fps_flipped.pkl"
-      args.imdbval_name = "val_data_3fps.pkl"
-      args.num_classes = 2 if cfg.AGNOSTIC else 201
-      args.set_cfgs = ['ANCHOR_SCALES', '[1,2,3,4,5,6,7,8,10,12,14,16,20,24,28,32,40,48,56,64]', 'MAX_NUM_GT_TWINS', '20', 'NUM_CLASSES', args.num_classes]  
+      #args.imdb_name = "train_data_5fps_flipped.pkl"
+      args.imdbval_name = "val_data_5fps.pkl"
+      args.num_classes = 201
+      args.set_cfgs = ['ANCHOR_SCALES', '[1,2,3,4,5,6,7,8,10,12,14,16,20,24,28,32,40,48,56,64]', 'NUM_CLASSES', args.num_classes]  
 
   args.cfg_file = "cfgs/{}.yml".format(args.net)
 
@@ -188,13 +178,14 @@ if __name__ == '__main__':
     
   cfg.USE_GPU_NMS = args.cuda
   cfg.CUDA = args.cuda
+  cfg.TRAIN.USE_FLIPPED = False
   
   print('Using config:')
   pprint.pprint(cfg)  
 
   roidb_path = args.roidb_dir + "/" + args.dataset + "/" + args.imdbval_name
   roidb = get_roidb(roidb_path)
-  cfg.TRAIN.USE_FLIPPED = False
+
 
   num_videos = len(roidb)
 
@@ -208,66 +199,47 @@ if __name__ == '__main__':
 
   # initilize the network here.
   if args.net == 'c3d':
-    tdcnn_demo = c3d_tdcnn(class_agnostic=cfg.AGNOSTIC, pretrained=False)
+    tdcnn_demo = c3d_tdcnn(pretrained=False)
   elif args.net =='res34':
-    tdcnn_demo = resnet_tdcnn(depth=34, class_agnostic=cfg.AGNOSTIC, pretrained=False)
+    tdcnn_demo = resnet_tdcnn(depth=34, pretrained=False)
   elif args.net =='res50':
-    tdcnn_demo = resnet_tdcnn(depth=50, class_agnostic=cfg.AGNOSTIC, pretrained=False)
+    tdcnn_demo = resnet_tdcnn(depth=50, pretrained=False)
   else:
     print("network is not defined")
     pdb.set_trace()
 
   tdcnn_demo.create_architecture()
+  print(tdcnn_demo)
 
   print("load checkpoint %s" % (load_name))
   checkpoint = torch.load(load_name)
   tdcnn_demo.load_state_dict(checkpoint['model'])
   if 'pooling_mode' in checkpoint.keys():
     cfg.POOLING_MODE = checkpoint['pooling_mode']
-
-
   print('load model successfully!')
   
-  device = torch.device("cuda:0" if args.cuda else "cpu")
-  
-  if args.cuda:
-    tdcnn_demo = tdcnn_demo.to(device)
+  device = torch.device("cuda" if args.cuda else "cpu")
+  tdcnn_demo = tdcnn_demo.to(device)
 
   start = time.time()
   # TODO: Add restriction for max_per_video
   max_per_video = 0
 
   vis = args.vis
-
   if vis:
     thresh = 0.05
   else:
     thresh = 0.005
 
-  #save_name = 'c3d_tdcnn_3'
-
   all_twins = [[[] for _ in xrange(num_videos)]
                for _ in xrange(args.num_classes)]
-
-  #output_dir = get_output_dir(imdb, save_name)
-  #dataset = roibatchLoader(roidb, args.num_classes)
-
-  #dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size,
-  #                          shuffle=False, num_workers=0,
-  #                          pin_memory=True)
-  #dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size,
-  #                          shuffle=False, num_workers=0,
-  #                          pin_memory=True)
-
-  #data_iter = iter(dataloader)
 
   _t = {'im_detect': time.time(), 'misc': time.time()}
 
   tdcnn_demo.eval()
   empty_array = np.transpose(np.array([[],[],[],[],[]]), (1,0))
   for i in xrange(num_videos):
-      #data = next(data_iter)
-      video_data = _get_video_blob(roidb[i])
+      video_data = get_video_blob(roidb[i])
       gt_twins = torch.Tensor(video_data.size(0), 0, 3)
       video_data = video_data.to(device)
       gt_twins = gt_twins.to(device)
@@ -285,14 +257,9 @@ if __name__ == '__main__':
           twin_deltas = twin_pred.data
           if cfg.TRAIN.TWIN_NORMALIZE_TARGETS_PRECOMPUTED:
           # Optionally normalize targets by a precomputed mean and stdev
-            if cfg.AGNOSTIC:
-                twin_deltas = twin_deltas.view(-1, 2) * torch.FloatTensor(cfg.TRAIN.TWIN_NORMALIZE_STDS).cuda() \
-                           + torch.FloatTensor(cfg.TRAIN.TWIN_NORMALIZE_MEANS).cuda()
-                twin_deltas = twin_deltas.view(1, -1, 2)
-            else:
-                twin_deltas = twin_deltas.view(-1, 2) * torch.FloatTensor(cfg.TRAIN.TWIN_NORMALIZE_STDS).cuda() \
-                           + torch.FloatTensor(cfg.TRAIN.TWIN_NORMALIZE_MEANS).cuda()
-                twin_deltas = twin_deltas.view(1, -1, 2 * args.num_classes)
+              twin_deltas = twin_deltas.view(-1, 2) * torch.FloatTensor(cfg.TRAIN.TWIN_NORMALIZE_STDS).to(device) \
+                       + torch.FloatTensor(cfg.TRAIN.TWIN_NORMALIZE_MEANS).to(device)
+              twin_deltas = twin_deltas.view(1, -1, 2 * args.num_classes)
 
           pred_twins = twin_transform_inv(twins, twin_deltas, 1)
           pred_twins = clip_twins(pred_twins, cfg.TRAIN.LENGTH[0], 1)
@@ -311,16 +278,14 @@ if __name__ == '__main__':
           #im = cv2.imread(imdb.video_path_at(i))
           #im2show = np.copy(im)
           pass
+      # skip j = 0, because it's the background class          
       for j in xrange(1, args.num_classes):
           inds = torch.nonzero(scores[:,j]>thresh).view(-1)
           # if there is det
           if inds.numel() > 0:
             cls_scores = scores[:,j][inds]
             _, order = torch.sort(cls_scores, 0, True)
-            if cfg.AGNOSTIC:
-              cls_twins = pred_twins[inds, :]
-            else:
-              cls_twins = pred_twins[inds][:, j * 2:(j + 1) * 2]
+            cls_twins = pred_twins[inds][:, j * 2:(j + 1) * 2]
             
             cls_dets = torch.cat((cls_twins, cls_scores.unsqueeze(1)), 1)
             # cls_dets = torch.cat((cls_twins, cls_scores), 1)
