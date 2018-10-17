@@ -62,13 +62,9 @@ def parse_args():
                       nargs=argparse.REMAINDER)
   parser.add_argument('--nw', dest='num_workers',
                       help='number of worker to load data',
-                      default=4, type=int)
-  parser.add_argument('--cuda', dest='cuda',
-                      help='whether use CUDA',
-                      action='store_true')                     
-  parser.add_argument('--mGPUs', dest='mGPUs',
-                      help='whether use multiple GPUs',
-                      action='store_true')
+                      default=4, type=int)                  
+  parser.add_argument('--gpus', dest='gpus', nargs='+', type=int, default=None,
+                      help='gpu ids.')                     
   parser.add_argument('--bs', dest='batch_size',
                       help='batch_size',
                       default=1, type=int)
@@ -109,7 +105,7 @@ def parse_args():
   parser.add_argument('--checkpoint', dest='checkpoint',
                       help='checkpoint to load model',
                       default=13711, type=int)
-# log and diaplay
+# log and display
   parser.add_argument('--use_tfboard', dest='use_tfboard',
                       help='whether use tensorflow tensorboard',
                       default=False, action='store_true')
@@ -172,8 +168,8 @@ if __name__ == '__main__':
 
   args.cfg_file = "cfgs/{}.yml".format(args.net)
   
-  cfg.CUDA = cfg.CUDA
-  cfg.USE_GPU_NMS = args.cuda
+  cfg.CUDA = True 
+  cfg.USE_GPU_NMS = True
   # -- Note: Use validation set and disable the flipped to enable faster loading.
   cfg.TRAIN.USE_FLIPPED = True
   
@@ -188,12 +184,10 @@ if __name__ == '__main__':
   # for reproduce
   np.random.seed(cfg.RNG_SEED)
   torch.manual_seed(cfg.RNG_SEED)
-  if args.cuda:
+  if cfg.CUDA:
     torch.cuda.manual_seed_all(cfg.RNG_SEED)
 
   cudnn.benchmark = True
-  if torch.cuda.is_available() and not args.cuda:
-    print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
   # train set
   roidb_path = args.roidb_dir + "/" + args.dataset + "/" + args.imdb_name
@@ -212,8 +206,6 @@ if __name__ == '__main__':
 
   dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size,
                             sampler=sampler_batch, num_workers=args.num_workers)
-
-  device = torch.device("cuda:0" if args.cuda else "cpu")
 
   # initilize the network here.
   if args.net == 'c3d':
@@ -259,17 +251,16 @@ if __name__ == '__main__':
     args.session = checkpoint['session']
     args.start_epoch = checkpoint['epoch']
     tdcnn_demo.load_state_dict(checkpoint['model'])
-    optimizer.load_state_dict(checkpoint['optimizer'])
-    lr = optimizer.param_groups[0]['lr']
+    optimizer_tmp = torch.optim.SGD(params, momentum=cfg.TRAIN.MOMENTUM)
+    optimizer_tmp.load_state_dict(checkpoint['optimizer'])
+    lr = optimizer_tmp.param_groups[0]['lr']
     if 'pooling_mode' in checkpoint.keys():
       cfg.POOLING_MODE = checkpoint['pooling_mode']
     print("loaded checkpoint %s" % (load_name))
 
-  if args.mGPUs:
-    tdcnn_demo = nn.DataParallel(tdcnn_demo)
-
-  
-  tdcnn_demo = tdcnn_demo.to(device)
+  if torch.cuda.is_available():
+      tdcnn_demo = tdcnn_demo.cuda()
+      tdcnn_demo = nn.parallel.DataParallel(tdcnn_demo, device_ids = args.gpus)
 
   iters_per_epoch = int(train_size / args.batch_size)
 
@@ -284,8 +275,8 @@ if __name__ == '__main__':
         lr *= args.lr_decay_gamma
 
     for step, (video_data, gt_twins) in enumerate(dataloader):
-      video_data = video_data.to(device)
-      gt_twins = gt_twins.to(device)
+      video_data = video_data.cuda()
+      gt_twins = gt_twins.cuda()
       
       tdcnn_demo.zero_grad()
       rois, cls_prob, twin_pred, \

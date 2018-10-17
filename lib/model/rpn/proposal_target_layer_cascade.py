@@ -34,9 +34,9 @@ class _ProposalTargetLayer(nn.Module):
 
     def forward(self, all_rois, gt_twins):
         # GT twins (batch_size, C, 3), each row of gt twin contains (x1, x2, label)
-        self.TWIN_NORMALIZE_MEANS = self.TWIN_NORMALIZE_MEANS.type_as(gt_twins)
-        self.TWIN_NORMALIZE_STDS = self.TWIN_NORMALIZE_STDS.type_as(gt_twins)
-        self.TWIN_INSIDE_WEIGHTS = self.TWIN_INSIDE_WEIGHTS.type_as(gt_twins)
+        self.TWIN_NORMALIZE_MEANS = self.TWIN_NORMALIZE_MEANS.to(gt_twins.device).type_as(gt_twins)
+        self.TWIN_NORMALIZE_STDS = self.TWIN_NORMALIZE_STDS.to(gt_twins.device).type_as(gt_twins)
+        self.TWIN_INSIDE_WEIGHTS = self.TWIN_INSIDE_WEIGHTS.to(gt_twins.device).type_as(gt_twins)
 
         gt_twins_append = gt_twins.new(gt_twins.size()).zero_()
         gt_twins_append[:,:,1:3] = gt_twins[:,:,:2]
@@ -131,7 +131,7 @@ class _ProposalTargetLayer(nn.Module):
         num_twins_per_video = overlaps.size(2)
 
         offset = torch.arange(0, batch_size)*gt_twins.size(1)
-        offset = offset.view(-1, 1).type_as(gt_assignment) + gt_assignment
+        offset = offset.view(-1, 1).type_as(gt_assignment).to(gt_assignment.device) + gt_assignment
         labels = gt_twins[:,:,2].contiguous().view(-1)[offset.view(-1)].view(batch_size, -1)
 
         labels_batch = labels.new(batch_size, rois_per_video).zero_()

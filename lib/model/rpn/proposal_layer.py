@@ -68,7 +68,6 @@ class _ProposalLayer(nn.Module):
         twin_deltas = input[1]
         # im_info = input[2]
         cfg_key = input[2]
-
         pre_nms_topN  = cfg[cfg_key].RPN_PRE_NMS_TOP_N
         post_nms_topN = cfg[cfg_key].RPN_POST_NMS_TOP_N
         nms_thresh    = cfg[cfg_key].RPN_NMS_THRESH
@@ -85,7 +84,7 @@ class _ProposalLayer(nn.Module):
         # Enumerate all shifts
         shifts = np.arange(0, length) * self._feat_stride
         shifts = torch.from_numpy(shifts.astype(float))
-        shifts = shifts.contiguous().type_as(scores).float()
+        shifts = shifts.contiguous().to(scores.device).type_as(scores)
 
         # Enumerate all shifted anchors:
         #
@@ -96,11 +95,9 @@ class _ProposalLayer(nn.Module):
         # expand to (batch_size, K*A, 2)
         A = self._num_anchors
         K = shifts.shape[0]
-
-        self._anchors = self._anchors.type_as(scores)
+        self._anchors = self._anchors.to(scores.device)
         anchors = self._anchors.view(1, A, 2) + shifts.view(K, 1, 1)
         anchors = anchors.view(1, K * A, 2).expand(batch_size, K * A, 2)
-
         # Transpose and reshape predicted twin transformations to get them
         # into the same order as the anchors:
         #

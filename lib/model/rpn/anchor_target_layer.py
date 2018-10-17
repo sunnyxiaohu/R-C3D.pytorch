@@ -67,7 +67,7 @@ class _AnchorTargetLayer(nn.Module):
         # Enumerate all shifts
         shifts = np.arange(0, length) * self._feat_stride
         shifts = torch.from_numpy(shifts.astype(float))
-        shifts = shifts.contiguous().type_as(rpn_cls_score).float()
+        shifts = shifts.contiguous().to(rpn_cls_score.device).type_as(rpn_cls_score)
         # Enumerate all shifted anchors:
         #
         # add A anchors (1, A, 2) to
@@ -77,7 +77,7 @@ class _AnchorTargetLayer(nn.Module):
         A = self._num_anchors
         K = shifts.shape[0]
 
-        self._anchors = self._anchors.type_as(rpn_cls_score) # move to specific context
+        self._anchors = self._anchors.to(rpn_cls_score.device).type_as(rpn_cls_score) # move to specific context
         all_anchors = self._anchors.view((1, A, 2)) + shifts.view(K, 1, 1)
         all_anchors = all_anchors.view(K * A, 2)
         #print ("all_anchors {}".format(all_anchors.shape))
@@ -150,7 +150,7 @@ class _AnchorTargetLayer(nn.Module):
 
         offset = torch.arange(0, batch_size)*gt_twins.size(1)
 
-        argmax_overlaps = argmax_overlaps + offset.view(batch_size, 1).type_as(argmax_overlaps)
+        argmax_overlaps = argmax_overlaps + offset.view(batch_size, 1).to(argmax_overlaps.device).type_as(argmax_overlaps)
         twin_targets = _compute_targets_batch(anchors, gt_twins.view(-1,3)[argmax_overlaps.view(-1), :].view(batch_size, -1, 3))
 
         # use a single value instead of 2 values for easy index.
@@ -209,11 +209,11 @@ def _unmap(data, count, inds, batch_size, fill=0):
     size count) """
     # for labels, twin_inside_weights and twin_outside_weights
     if data.dim() == 2:
-        ret = torch.Tensor(batch_size, count).fill_(fill).type_as(data)
+        ret = torch.Tensor(batch_size, count).fill_(fill).to(data.device).type_as(data)
         ret[:, inds] = data
     # for twin_targets
     else:
-        ret = torch.Tensor(batch_size, count, data.size(2)).fill_(fill).type_as(data)
+        ret = torch.Tensor(batch_size, count, data.size(2)).fill_(fill).to(data.device).type_as(data)
         ret[:, inds,:] = data
     return ret
 
