@@ -20,13 +20,13 @@ During our implementing, we referred the above implementations, especailly [long
 
 * **It supports multiple GPUs training**. We use a multiple GPU wrapper (nn.DataParallel here) to make it flexible to use one or more GPUs, as a merit of the above two features.
 
-* **It is memory efficient**. We limit the image aspect ratio, and group images with similar aspect ratios into a minibatch. As such, we can train resnet101 and VGG16 with batchsize = 4 (4 images) on a sigle Titan X (12 GB). When training with 8 GPU, the maximum batchsize for each GPU is 3 (Res101), totally 24.
+* **It is memory efficient**. We limit the image aspect ratio, and group images with similar aspect ratios into a minibatch. As such, we can train 3d-resnet and VGG16 with batchsize = 4 (4 images) on a sigle Titan X (12 GB). When training with 8 GPU, the maximum batchsize for each GPU is 3 (Res101), totally 24.
 
 * **It is faster**. Based on the above modifications, the training is much faster. We report the training speed on NVIDIA TITAN Xp in the tables below.
 
 ## Benchmarking
 
-We benchmark our code thoroughly on three datasets: pascal voc, coco and imagenet-200, using two different network architecture: vgg16 and resnet101. Below are the results:
+We benchmark our code thoroughly on three datasets: pascal voc, coco and imagenet-200, using two different network architecture: vgg16 and 3d-resnet. Below are the results:
 
 ### What we are going to do
 
@@ -75,7 +75,7 @@ We used two pretrained models in our experiments, VGG and ResNet101. You can dow
 Download them and put them into the data/pretrained_model/.
 
 **NOTE**. We would suggest to use Caffe pretrained models from the above link to reproduce our results. 
-You can found the converted pretrained model in [BaiduYun](https://pan.baidu.com/s/1saNqGBkzZHwZpG-A5RDLVw)
+You can found the converted pretrained model in [BaiduYun](https://pan.baidu.com/s/1saNqGBkzZHwZpG-A5RDLVw) and [OneDrive](https://1drv.ms/u/s!Asa9-hE0xR2KgRlSECoq_yv1BVtk)
 
 **If you want to use pytorch pre-trained models, please remember to transpose images from BGR to RGB, and also use the same data transformer (minus mean and normalize) as used in pretrained model.**
 
@@ -127,13 +127,7 @@ CUDA_VISIBLE_DEVICES=$GPU_ID python trainval_net.py \
 where 'bs' is the batch size with default 1.
 Above, BATCH_SIZE and WORKER_NUMBER can be set adaptively according to your GPU memory size.
 
-~~ For multiple GPUs (not test yet.)  Try: ~~
-```
-python trainval_net.py --dataset thumos14 --net c3d \
-                       --bs 24 --nw 8 \
-                       --lr $LEARNING_RATE --lr_decay_step $DECAY_STEP \
-                       --cuda --mGPUs
-```
+~~ For multiple GPUs (not support yet.)  Try: ~~
 
 Change dataset to "activivity" or 'charades' if you want to train on ActivityNet or Charades.
 
