@@ -127,11 +127,13 @@ where 'bs' is the batch size with default 1.
 Above, BATCH_SIZE and WORKER_NUMBER can be set adaptively according to your GPU memory size.
 
 For multiple GPUs Try:
+```
 python trainval_net.py \
                    --dataset thumos14 --net c3d \
                    --bs $BATCH_SIZE --nw $WORKER_NUMBER \
                    --lr $LEARNING_RATE --lr_decay_step $DECAY_STEP \
                    --gpus 0 1
+```
 Change dataset to "activivity" or 'charades' if you want to train on ActivityNet or Charades.
 
 ## Test
