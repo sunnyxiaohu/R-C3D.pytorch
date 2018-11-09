@@ -325,7 +325,7 @@ if __name__ == '__main__':
         loss_temp = 0
         start = time.time()
 
-    if args.mGPUs:
+    if len(args.gpus) > 1:
       save_name = os.path.join(output_dir, 'tdcnn_{}_{}_{}.pth'.format(args.session, epoch, step))
       save_checkpoint({
         'session': args.session,

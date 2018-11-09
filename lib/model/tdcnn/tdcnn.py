@@ -96,6 +96,11 @@ class _TDCNN(nn.Module):
             # bounding box regression L1 loss
             RCNN_loss_twin = _smooth_l1_loss(twin_pred, rois_target, rois_inside_ws, rois_outside_ws)
 
+            # RuntimeError caused by mGPUs and higher pytorch version: https://github.com/jwyang/faster-rcnn.pytorch/issues/226
+            rpn_loss_cls = torch.unsqueeze(rpn_loss_cls, 0)
+            rpn_loss_twin = torch.unsqueeze(rpn_loss_twin, 0)
+            RCNN_loss_cls = torch.unsqueeze(RCNN_loss_cls, 0)
+            RCNN_loss_twin = torch.unsqueeze(RCNN_loss_twin, 0)
 
         cls_prob = cls_prob.view(batch_size, rois.size(1), -1)
         twin_pred = twin_pred.view(batch_size, rois.size(1), -1)

@@ -67,12 +67,6 @@ def parse_args():
   parser.add_argument('--cuda', dest='cuda',
                       help='whether use CUDA',
                       action='store_true')
-  parser.add_argument('--mGPUs', dest='mGPUs',
-                      help='whether use multiple GPUs',
-                      action='store_true')
-  parser.add_argument('--parallel_type', dest='parallel_type',
-                      help='which part of model to parallel, 0: all, 1: model before roi pooling',
-                      default=0, type=int)
   parser.add_argument('--checksession', dest='checksession',
                       help='checksession to load model',
                       default=1, type=int)
