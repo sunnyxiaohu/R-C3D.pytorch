@@ -20,7 +20,7 @@ import pdb
 class roibatchLoader(data.Dataset):
   def __init__(self, roidb, normalize=None):
     self._roidb = roidb
-    #self._num_classes = num_classes
+    self.max_num_box = cfg.MAX_NUM_GT_TWINS
     self.normalize = normalize
     # self.batch_size = batch_size
 
@@ -35,6 +35,9 @@ class roibatchLoader(data.Dataset):
     data = data.contiguous().view(3, length, height, width)
     if cfg.TRAIN.HAS_RPN or cfg.TEST.HAS_RPN:
         gt_windows = torch.from_numpy(blobs['gt_windows'])
+        gt_windows_padding = gt_windows.new(self.max_num_box, gt_windows.size(1)).zero_()
+        num_gt = min(gt_windows.size(0), self.max_num_box)
+        gt_windows_padding[:num_gt, :] = gt_windows[:num_gt]         
         #num_twin = gt_windows.size()
         #gt_windows.view(3)
         #print("data {}".format(data.shape))
