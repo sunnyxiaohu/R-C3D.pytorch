@@ -42,7 +42,7 @@ class roibatchLoader(data.Dataset):
         #gt_windows.view(3)
         #print("data {}".format(data.shape))
         #print("gt_windows {}".format(gt_windows.shape))
-        return data, gt_windows
+        return data, gt_windows_padding
     else: # not using RPN
         raise NotImplementedError
 
