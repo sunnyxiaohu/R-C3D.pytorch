@@ -264,17 +264,17 @@ def resnet200(**kwargs):
 
 class resnet_tdcnn(_TDCNN):
     def __init__(self, depth=34, pretrained=False):
-        self.model_path = '/home/agwang/Deeplearning/pytorch_dir/pretrainedmodels/resnet-34-kinetics-cpu.pth'
+        #self.model_path = '/home/agwang/Deeplearning/pytorch_dir/pretrainedmodels/resnet-34-kinetics-cpu.pth'
         self.pretrained = pretrained
         self.depth = depth
         self.shortcut_type = 'A' if depth in [18, 34] else 'B'
         self.dout_base_model = 256 if depth in [18, 34] else 1024
-        self.model_path = '/home/agwang/Deeplearning/pytorch_dir/pretrainedmodels/resnet-{}-kinetics.pth'.format(depth)
+        self.model_path = 'data/pretrained_model/resnet-{}-kinetics.pth'.format(depth)
         self.dout_top_model = 512 if depth in [18, 34] else 2048
         _TDCNN.__init__(self)
 
     def _init_modules(self):
-        net_str = "resnet{}(sample_size=112, sample_duration=768, shortcut_type=\'{}\')".format(self.depth, self.shortcut_type)
+        net_str = "resnet{}(sample_size=112, sample_duration={}, shortcut_type=\'{}\')".format(self.depth, int(cfg.TRAIN.LENGTH[0]), self.shortcut_type)
         resnet = eval(net_str)
         if self.pretrained:
             print("Loading pretrained weights from %s" %(self.model_path))
@@ -307,7 +307,7 @@ class resnet_tdcnn(_TDCNN):
 
         def set_bn_fix(m):
             classname = m.__class__.__name__
-            if classname.find('BatchNorm') != -1:
+            if classname.find('BatchNorm3d') != -1:
                 for p in m.parameters(): p.requires_grad=False
 
         self.RCNN_base.apply(set_bn_fix)
@@ -328,7 +328,7 @@ class resnet_tdcnn(_TDCNN):
 
         def set_bn_eval(m):
             classname = m.__class__.__name__
-            if classname.find('BatchNorm') != -1:
+            if classname.find('BatchNorm3d') != -1:
                 m.eval()
 
         self.RCNN_base.apply(set_bn_eval)

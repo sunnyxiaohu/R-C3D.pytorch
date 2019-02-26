@@ -9,7 +9,7 @@ def main(ground_truth_filename, prediction_filename,
 
     anet_detection = ANETdetection(ground_truth_filename, prediction_filename,
                                    subset=subset, tiou_thresholds=tiou_thresholds,
-                                   verbose=verbose, check_status=True)
+                                   verbose=verbose, check_status=check_status)
     anet_detection.evaluate()
 
 def parse_input():

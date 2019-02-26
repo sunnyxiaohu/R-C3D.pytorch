@@ -19,7 +19,7 @@ cfg = __C
 __C.TRAIN = edict()
 
 # Initial learning rate
-__C.TRAIN.LEARNING_RATE = 0.001
+#__C.TRAIN.LEARNING_RATE = 0.001
 
 # Momentum
 __C.TRAIN.MOMENTUM = 0.9
@@ -28,13 +28,13 @@ __C.TRAIN.MOMENTUM = 0.9
 __C.TRAIN.WEIGHT_DECAY = 0.0005
 
 # Factor for reducing the learning rate
-__C.TRAIN.GAMMA = 0.1
+#__C.TRAIN.GAMMA = 0.1
 
 # Step size for reducing the learning rate, currently only support one step
-__C.TRAIN.STEPSIZE = [30000]
+#__C.TRAIN.STEPSIZE = [30000]
 
 # Iteration intervals for showing the loss during training, on command line interface
-__C.TRAIN.DISPLAY = 10
+#__C.TRAIN.DISPLAY = 10
 
 # Whether to double the learning rate for bias
 __C.TRAIN.DOUBLE_BIAS = True
@@ -53,10 +53,10 @@ __C.TRAIN.BIAS_DECAY = False
 #__C.TRAIN.ASPECT_GROUPING = False
 
 # The number of snapshots kept, older ones are deleted to save space
-__C.TRAIN.SNAPSHOT_KEPT = 3
+#__C.TRAIN.SNAPSHOT_KEPT = 3
 
 # The time interval for saving tensorflow summaries
-__C.TRAIN.SUMMARY_INTERVAL = 180
+#__C.TRAIN.SUMMARY_INTERVAL = 180
 
 # Length of frame to use during training (can list multiple lengths), single length implementated
 __C.TRAIN.LENGTH = (512,)
@@ -69,7 +69,7 @@ __C.TRAIN.CROP_SIZE  = 112
 __C.TRAIN.VIDEO_BATCH = 1
 
 # Images to use per minibatch
-__C.TRAIN.IMS_PER_BATCH = 1
+#__C.TRAIN.IMS_PER_BATCH = 1
 
 # Minibatch size (number of regions of interest [ROIs])
 __C.TRAIN.BATCH_SIZE = 128
@@ -85,22 +85,19 @@ __C.TRAIN.FG_THRESH = 0.5
 __C.TRAIN.BG_THRESH_HI = 0.5
 __C.TRAIN.BG_THRESH_LO = 0.1
 
-# Use horizontally-flipped images during training?
-__C.TRAIN.USE_FLIPPED = True
-
 # Train bounding-box regressors
 __C.TRAIN.TWIN_REG = True
 
 # Overlap required between a ROI and ground-truth box in order for that ROI to
 # be used as a bounding-box regression training example
-__C.TRAIN.TWIN_THRESH = 0.5
+#__C.TRAIN.TWIN_THRESH = 0.5
 
 # Iterations between snapshots
-__C.TRAIN.SNAPSHOT_ITERS = 5000
+#__C.TRAIN.SNAPSHOT_ITERS = 5000
 
 # solver.prototxt specifies the snapshot path prefix, this adds an optional
 # infix to yield the path: <prefix>[_<infix>]_iters_XYZ.caffemodel
-__C.TRAIN.SNAPSHOT_PREFIX = 'res101_faster_rcnn'
+#__C.TRAIN.SNAPSHOT_PREFIX = 'res101_faster_rcnn'
 # __C.TRAIN.SNAPSHOT_INFIX = ''
 
 # Use a prefetch thread in roi_data_layer.layer
@@ -118,14 +115,14 @@ __C.TRAIN.TWIN_NORMALIZE_MEANS = (0.0, 0.0)
 __C.TRAIN.TWIN_NORMALIZE_STDS = (0.1, 0.2)
 
 # Train using these proposals
-__C.TRAIN.PROPOSAL_METHOD = 'gt'
+#__C.TRAIN.PROPOSAL_METHOD = 'gt'
 
 # Make minibatches from images that have similar aspect ratios (i.e. both
 # tall and thin or both short and wide) in order to avoid wasting computation
 # on zero-padding.
 
 # Use RPN to detect objects
-__C.TRAIN.HAS_RPN = True
+#__C.TRAIN.HAS_RPN = True
 # IOU >= thresh: positive example
 __C.TRAIN.RPN_POSITIVE_OVERLAP = 0.7
 # IOU < thresh: negative example
@@ -152,20 +149,20 @@ __C.TRAIN.RPN_TWIN_INSIDE_WEIGHTS = (1.0, 1.0)
 __C.TRAIN.RPN_POSITIVE_WEIGHT = -1.0
 # Whether to use all ground truth bounding twins for training,
 # For COCO, setting USE_ALL_GT to False will exclude twins that are flagged as ''iscrowd''
-__C.TRAIN.USE_ALL_GT = True
+#__C.TRAIN.USE_ALL_GT = True
 
 # Whether to tune the batch normalization parameters during training
-__C.TRAIN.BN_TRAIN = False
+#__C.TRAIN.BN_TRAIN = False
 
-__C.TRAIN.CINPUT = False
-__C.TRAIN.RANDOM = False
-__C.TRAIN.OHEM_USE_NMS = True
-__C.TRAIN.OHEM_NMS_THRESH = 0.7
-__C.TRAIN.OHEM_LOSS_ONLY_CLASSIFICATION = False
-__C.TRAIN.OHEM_LOSS_ONLY_LOCALIZATION = False
+#__C.TRAIN.CINPUT = False
+#__C.TRAIN.RANDOM = False
+#__C.TRAIN.OHEM_USE_NMS = True
+#__C.TRAIN.OHEM_NMS_THRESH = 0.7
+#__C.TRAIN.OHEM_LOSS_ONLY_CLASSIFICATION = False
+#__C.TRAIN.OHEM_LOSS_ONLY_LOCALIZATION = False
 
 # Whether to use mask segmentation for proposal generation stage (RPN)
-__C.TRAIN.RPN_HAS_MASK=False
+#__C.TRAIN.RPN_HAS_MASK=False
 
 #
 # Testing options
@@ -180,10 +177,10 @@ __C.TEST.NMS = 0.3
 __C.TEST.TWIN_REG = True
 
 # Propose twins
-__C.TEST.HAS_RPN = True
+#__C.TEST.HAS_RPN = True
 
 # Test using these proposals
-__C.TEST.PROPOSAL_METHOD = 'gt'
+#__C.TEST.PROPOSAL_METHOD = 'gt'
 
 ## NMS threshold used on RPN proposals
 __C.TEST.RPN_NMS_THRESH = 0.7
@@ -198,7 +195,7 @@ __C.TEST.RPN_MIN_SIZE = 8
 
 # Testing mode, default to be 'nms', 'top' is slower but better
 # See report for details
-__C.TEST.MODE = 'nms'
+#__C.TEST.MODE = 'nms'
 
 # Only useful when TEST.MODE is 'top', specifies the number of top proposals to select
 __C.TEST.RPN_TOP_N = 5000
@@ -220,37 +217,15 @@ __C.RESNET.MAX_POOL = False
 __C.RESNET.FIXED_BLOCKS = 0
 
 #
-# MobileNet options
-#
-
-__C.MOBILENET = edict()
-
-# Whether to regularize the depth-wise filters during training
-__C.MOBILENET.REGU_DEPTH = False
-
-# Number of fixed layers during training, by default the first of all 14 layers is fixed
-# Range: 0 (none) to 12 (all)
-__C.MOBILENET.FIXED_LAYERS = 5
-
-# Weight decay for the mobilenet weights
-__C.MOBILENET.WEIGHT_DECAY = 0.00004
-
-# Depth multiplier
-__C.MOBILENET.DEPTH_MULTIPLIER = 1.
-
-#
 # MISC
 #
 
 __C.INPUT = 'frames'
 
-# Num classes for action detection dataset
-__C.NUM_CLASSES = 21
-
 # The mapping from image coordinates to feature map coordinates might cause
 # some twins that are distinct in image space to become identical in feature
 # coordinates. If DEDUP_TWINS > 0, then DEDUP_TWINS is used as the scale factor
-# for identifying duplicate twins.
+# for identifying duplicate twins. ROI-POOLING
 # 1/8 is correct for C3D
 __C.DEDUP_TWINS = 1./8.
 
@@ -266,9 +241,6 @@ __C.RNG_SEED = 3
 # A small number that's used many times
 __C.EPS = 1e-14
 
-# Frame per second
-__C.FPS = 25
-
 # Root directory of project
 __C.ROOT_DIR = osp.abspath(osp.join(osp.dirname(__file__), '..', '..', '..'))
 
@@ -276,7 +248,7 @@ __C.ROOT_DIR = osp.abspath(osp.join(osp.dirname(__file__), '..', '..', '..'))
 __C.DATA_DIR = osp.abspath(osp.join(__C.ROOT_DIR, 'data'))
 
 # Name (or path to) the matlab executable
-__C.MATLAB = 'matlab'
+#__C.MATLAB = 'matlab'
 
 # Place outputs under an experiments directory
 __C.EXP_DIR = 'default'
@@ -285,7 +257,7 @@ __C.EXP_DIR = 'default'
 __C.USE_GPU_NMS = True
 
 # Default GPU device id
-__C.GPU_ID = 0
+#__C.GPU_ID = 0
 
 __C.POOLING_MODE = 'pool'
 
@@ -294,21 +266,39 @@ __C.POOLING_LENGTH = 4
 __C.POOLING_HEIGHT = 2
 __C.POOLING_WIDTH = 2
 
-# Maximal number of gt rois in an image during Training
-__C.MAX_NUM_GT_TWINS = 20
+# 
+__C.NUM_CLASSES = 21
 
-# Anchor scales for RPN
-__C.ANCHOR_SCALES = [8,16,32]
+__C.ANCHOR_SCALES = [1,2,]
+
+# Maximal number of gt rois in an video during Training
+__C.MAX_NUM_GT_TWINS = 20
 
 # Feature stride for RPN
 __C.FEAT_STRIDE = [8, ]
 
 __C.CUDA = False
 
-__C.CROP_RESIZE_WITH_MAX_POOL = True
+# Temporal sparse sampling
+__C.TEMP_SPARSE_SAMPLING = False
+# Output rpn score
+__C.RPN_OUTPUT_SCORE = False
+
+__C.ROI_CTX_SCALE = []
+
+# Hard sample mining for detection
+__C.TRAIN.HARD_MINING_RATIO = 1.0
+
+# Use mask branch for rpn
+__C.RPN_HAS_MASK = False
+
+# Use batch attention for proposals
+__C.USE_ATTENTION = False
+
+#__C.CROP_RESIZE_WITH_MAX_POOL = True
 
 # Whether to use mask segmentation for proposal generation stage (RPN)
-__C.RPN_HAS_MASK=False
+#__C.RPN_HAS_MASK=False
 
 import pdb
 def get_output_dir(imdb, weights_filename):

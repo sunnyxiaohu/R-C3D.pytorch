@@ -66,7 +66,6 @@ class _ProposalLayer(nn.Module):
         # the second set are the fg probs
         scores = input[0][:, self._num_anchors:, :, :, :]
         twin_deltas = input[1]
-        # im_info = input[2]
         cfg_key = input[2]
         pre_nms_topN  = cfg[cfg_key].RPN_PRE_NMS_TOP_N
         post_nms_topN = cfg[cfg_key].RPN_POST_NMS_TOP_N
@@ -84,18 +83,18 @@ class _ProposalLayer(nn.Module):
         # Enumerate all shifts
         shifts = np.arange(0, length) * self._feat_stride
         shifts = torch.from_numpy(shifts.astype(float))
-        shifts = shifts.contiguous().to(scores.device).type_as(scores)
+        shifts = shifts.contiguous().type_as(scores)
 
         # Enumerate all shifted anchors:
         #
         # add A anchors (1, A, 2) to
-        # cell K shifts (K, 1, 2) to get
+        # cell K shifts (K, 1, 1) to get
         # shift anchors (K, A, 2)
-        # reshape to (K*A, 2) shifted anchors
+        # reshape to (1, K*A, 2) shifted anchors
         # expand to (batch_size, K*A, 2)
         A = self._num_anchors
         K = shifts.shape[0]
-        self._anchors = self._anchors.to(scores.device)
+        self._anchors = self._anchors.type_as(scores)
         anchors = self._anchors.view(1, A, 2) + shifts.view(K, 1, 1)
         anchors = anchors.view(1, K * A, 2).expand(batch_size, K * A, 2)
         # Transpose and reshape predicted twin transformations to get them
@@ -122,15 +121,10 @@ class _ProposalLayer(nn.Module):
         # 2. clip predicted wins to video
         proposals = clip_twins(proposals, length * self._feat_stride, batch_size)
 
-        # TODO: assign the score to 0 if it's non keep.
-        #keep = self._filter_twins(proposals, min_size)
-        #scores_keep[keep] = 0
-
-        # trim keep index to make it euqal over batch
-        # keep_idx = torch.cat(tuple(keep_idx), 0)
-
-        # scores_keep = scores.view(-1)[keep_idx].view(batch_size, trim_size)
-        # proposals_keep = proposals.view(-1, 2)[keep_idx, :].contiguous().view(batch_size, trim_size, 2)
+        # 3. remove predicted twins with either length < threshold
+        # assign the score to 0 if it's non keep.
+        no_keep = self._filter_twins_reverse(proposals, min_size)
+        scores[no_keep] = 0
         
         scores_keep = scores
         proposals_keep = proposals
@@ -147,12 +141,12 @@ class _ProposalLayer(nn.Module):
             output_score = scores.new(batch_size, post_nms_topN, 2).zero_()
 
         for i in range(batch_size):
-            # # 3. remove predicted twins with either height or width < threshold
+
             proposals_single = proposals_keep[i]
             scores_single = scores_keep[i]
 
-            # # 4. sort all (proposal, score) pairs by score from highest to lowest
-            # # 5. take top pre_nms_topN (e.g. 6000)
+            # 4. sort all (proposal, score) pairs by score from highest to lowest
+            # 5. take top pre_nms_topN (e.g. 6000)
             order_single = order[i]
 
             if pre_nms_topN > 0 and pre_nms_topN < scores_keep.numel():
@@ -196,8 +190,9 @@ class _ProposalLayer(nn.Module):
         """Reshaping happens during the call to forward."""
         pass
 
-    def _filter_twins(self, twins, min_size):
-        """Remove all twins with length smaller than min_size. twins will be (batch_size, C, 2), keep will be (batch_size, C)"""
+    def _filter_twins_reverse(self, twins, min_size):
+        """get the keep index of all twins with length smaller than min_size. 
+        twins will be (batch_size, C, 2), keep will be (batch_size, C)"""
         ls = twins[:, :, 1] - twins[:, :, 0] + 1
-        keep = (ls >= min_size.view(-1,1).expand_as(ls))
-        return keep
+        no_keep = (ls < min_size)
+        return no_keep

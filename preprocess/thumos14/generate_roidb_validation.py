@@ -18,7 +18,7 @@ FPS = 25
 LENGTH = 768
 STEP = LENGTH / 4
 WINS = [LENGTH * 1]
-FRAME_DIR = '/media/agwang/Data1/action-datasets/THUMOS14'
+FRAME_DIR = '/media/F/THUMOS14'
 META_DIR = os.path.join(FRAME_DIR, 'annotation_')
 
 USE_FLIPPED = False

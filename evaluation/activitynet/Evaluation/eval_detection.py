@@ -4,9 +4,9 @@ import json
 import numpy as np
 import pandas as pd
 
-from utils import get_blocked_videos
-from utils import interpolated_prec_rec
-from utils import segment_iou
+from .utils import get_blocked_videos
+from .utils import interpolated_prec_rec
+from .utils import segment_iou
 
 class ANETdetection(object):
 

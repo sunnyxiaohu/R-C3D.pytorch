@@ -1,10 +1,11 @@
 #!/bin/bash
-NET_DIR=c3d
-DATASET=thumos14
+set -x
+NET_DIR=$1
+DATASET=$2
 
 array=( $@ )
 len=${#array[@]}
-EXTRA_ARGS=${array[@]:0:$len}
+EXTRA_ARGS=${array[@]:2:$len}
 
 export PYTHONUNBUFFERED=true
 #checkpoint 30103 checkepoch 3 --r true --lr_decay_step 10 --epochs 12

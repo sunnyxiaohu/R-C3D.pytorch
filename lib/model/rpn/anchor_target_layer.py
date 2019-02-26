@@ -37,9 +37,7 @@ class _AnchorTargetLayer(nn.Module):
         super(_AnchorTargetLayer, self).__init__()
 
         self._feat_stride = feat_stride
-        self._scales = scales
-        anchor_scales = scales
-        self._anchors = torch.from_numpy(generate_anchors(scales=np.array(anchor_scales))).float()
+        self._anchors = torch.from_numpy(generate_anchors(base_size=feat_stride, scales=np.array(scales))).float()
         self._num_anchors = self._anchors.size(0)
 
         # allow boxes to sit over the edge by a small amount
@@ -67,20 +65,19 @@ class _AnchorTargetLayer(nn.Module):
         # Enumerate all shifts
         shifts = np.arange(0, length) * self._feat_stride
         shifts = torch.from_numpy(shifts.astype(float))
-        shifts = shifts.contiguous().to(rpn_cls_score.device).type_as(rpn_cls_score)
+        shifts = shifts.contiguous().type_as(rpn_cls_score)
         # Enumerate all shifted anchors:
         #
         # add A anchors (1, A, 2) to
-        # cell K shifts (K, 1, 2) to get
+        # cell K shifts (K, 1, 1) to get
         # shift anchors (K, A, 2)
         # reshape to (K*A, 2) shifted anchors
         A = self._num_anchors
         K = shifts.shape[0]
 
-        self._anchors = self._anchors.to(rpn_cls_score.device).type_as(rpn_cls_score) # move to specific context
+        self._anchors = self._anchors.type_as(rpn_cls_score) # move to specific context
         all_anchors = self._anchors.view((1, A, 2)) + shifts.view(K, 1, 1)
         all_anchors = all_anchors.view(K * A, 2)
-        #print ("all_anchors {}".format(all_anchors.shape))
         total_anchors = int(K * A)
 
         keep = ((all_anchors[:, 0] >= -self._allowed_border) &
@@ -97,7 +94,7 @@ class _AnchorTargetLayer(nn.Module):
         twin_outside_weights = gt_twins.new(batch_size, inds_inside.size(0)).zero_()
         #print("anchors {}".format(anchors.shape)) #(876, 2)
         #print("gt_twins {}".format(gt_twins.shape)) #(1, 6, 3)
-        # assume anchors and gt_wins be (batch_size, N, 2) and (batch_size, K, 2), respectively, overlaps will be (batch_size, N, K)
+        # assume anchors(batch_size, N, 2) and gt_wins(batch_size, K, 2), respectively, overlaps will be (batch_size, N, K)
         overlaps = twins_overlaps_batch(anchors, gt_twins)
         # find max_overlaps for each dt: (batch_size, N)
         max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
@@ -143,14 +140,13 @@ class _AnchorTargetLayer(nn.Module):
             if sum_bg[i] > num_bg:
                 bg_inds = torch.nonzero(labels[i] == 0).view(-1)
                 #rand_num = torch.randperm(bg_inds.size(0)).type_as(gt_twins).long()
-
                 rand_num = torch.from_numpy(np.random.permutation(bg_inds.size(0))).type_as(gt_twins).long()
                 disable_inds = bg_inds[rand_num[:bg_inds.size(0)-num_bg]]
                 labels[i][disable_inds] = -1
 
         offset = torch.arange(0, batch_size)*gt_twins.size(1)
 
-        argmax_overlaps = argmax_overlaps + offset.view(batch_size, 1).to(argmax_overlaps.device).type_as(argmax_overlaps)
+        argmax_overlaps = argmax_overlaps + offset.view(batch_size, 1).type_as(argmax_overlaps)
         twin_targets = _compute_targets_batch(anchors, gt_twins.view(-1,3)[argmax_overlaps.view(-1), :].view(batch_size, -1, 3))
 
         # use a single value instead of 2 values for easy index.
@@ -163,6 +159,8 @@ class _AnchorTargetLayer(nn.Module):
         else:
             assert ((cfg.TRAIN.RPN_POSITIVE_WEIGHT > 0) &
                     (cfg.TRAIN.RPN_POSITIVE_WEIGHT < 1))
+            positive_weights = cfg.TRAIN.RPN_POSITIVE_WEIGHT
+            negative_weights = 1 - positive_weights                    
 
         twin_outside_weights[labels == 1] = positive_weights
         twin_outside_weights[labels == 0] = negative_weights
@@ -209,11 +207,11 @@ def _unmap(data, count, inds, batch_size, fill=0):
     size count) """
     # for labels, twin_inside_weights and twin_outside_weights
     if data.dim() == 2:
-        ret = torch.Tensor(batch_size, count).fill_(fill).to(data.device).type_as(data)
+        ret = data.new(batch_size, count).fill_(fill)
         ret[:, inds] = data
     # for twin_targets
     else:
-        ret = torch.Tensor(batch_size, count, data.size(2)).fill_(fill).to(data.device).type_as(data)
+        ret = data.new(batch_size, count, data.size(2)).fill_(fill)
         ret[:, inds,:] = data
     return ret
 

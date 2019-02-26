@@ -33,11 +33,6 @@ def twin_transform_inv(wins, deltas, batch_size):
     # wins will be (batch_size, C, 2)
     # deltas will be (batch_size, C, 2)
     # pred_wins will be (batch_size, C, 2)
-    # TODO: solve the case when no wins occured
-    # if wins.shape[0] == 0:
-    #    return np.zeros((0, deltas.shape[1]), dtype=deltas.dtype)
-
-    # wins = wins.astype(deltas.dtype, copy=False)
 
     lengths = wins[:, :, 1] - wins[:, :, 0] + 1.0
     ctr_x = wins[:, :, 0] + 0.5 * lengths
@@ -60,9 +55,7 @@ def clip_twins(wins, video_length, batch_size):
     """
     Clip wins to video boundaries.
     """
-    for i in range(batch_size):
-        wins[i,:,0::2].clamp_(0, video_length-1)
-        wins[i,:,1::2].clamp_(0, video_length-1)
+    wins.clamp_(0, video_length-1)
     return wins
 
 def twin_transform_batch(ex_rois, gt_rois):
@@ -129,7 +122,9 @@ def twins_overlaps(anchors, gt_twins):
 
 def twins_overlaps_batch(anchors, gt_twins):
     """
-    anchors: (N, 2) ndarray of float or (batch_size, K, 2) ndarray of float
+    anchors: 
+        For RPN: (N, 2) ndarray of float or (batch_size, N, 2) ndarray of float
+        For TDCNN: (batch_size, N, 3) ndarray of float
     gt_twins: (batch_size, K, 3) ndarray of float, (x1, x2, class_id)
     overlaps: (batch_size, N, K) ndarray of overlap between twins and query_twins
     """
@@ -174,7 +169,7 @@ def twins_overlaps_batch(anchors, gt_twins):
 
         if anchors.size(2) == 2:
             anchors = anchors[:,:,:2].contiguous()
-        # (conf, x1, x2)??
+        # (video_idx, x1, x2)
         else:
             anchors = anchors[:,:,1:3].contiguous()
 

@@ -1,3 +1,4 @@
+function eval_thumos14()
 %
 
 % ----------------------------------------------------------------------------------------------------------------
@@ -28,6 +29,7 @@ proposals_per_video = 200;
 use_reg = false;
 for index = 1:length(test_thresholds)
     threshold = test_thresholds(index);
+    fprintf('\n threshold=%f \n', threshold)    
     [videonames,t1,t2,clsid,conf]=textread(detfilename,'%s%f%f%d%f');
     %step1: For multilabel: assign all CliffDiving label for Diving label
     %cliffDiving = clsid==5;

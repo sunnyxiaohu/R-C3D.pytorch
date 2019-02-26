@@ -13,6 +13,7 @@ from model.rpn.proposal_target_layer_cascade import _ProposalTargetLayer
 import time
 import pdb
 from model.utils.net_utils import _smooth_l1_loss
+from model.utils.non_local_dot_product import NONLocalBlock3D
 
 DEBUG = False
 
@@ -30,18 +31,25 @@ class _TDCNN(nn.Module):
         self.RCNN_rpn = _RPN(self.dout_base_model)
         self.RCNN_proposal_target = _ProposalTargetLayer(self.n_classes)
         self.RCNN_roi_temporal_pool = _RoITemporalPooling(cfg.POOLING_LENGTH, cfg.POOLING_HEIGHT, cfg.POOLING_WIDTH, cfg.DEDUP_TWINS)
+        if cfg.USE_ATTENTION:
+            self.RCNN_attention = NONLocalBlock3D(self.dout_base_model, inter_channels=self.dout_base_model)
+        
+    def prepare_data(self, video_data):
+        return video_data
 
     def forward(self, video_data, gt_twins):
         batch_size = video_data.size(0)
 
         gt_twins = gt_twins.data
-
+        # prepare data
+        video_data = self.prepare_data(video_data)
         # feed image data to base model to obtain base feature map
         base_feat = self.RCNN_base(video_data)
         # feed base feature map tp RPN to obtain rois
-        # return rois, [rois_score], rpn_cls_prob, rpn_twin_pred, self.rpn_loss_cls, self.rpn_loss_twin, rpn_label
+        # rois, [rois_score], rpn_cls_prob, rpn_twin_pred, self.rpn_loss_cls, self.rpn_loss_twin, self.rpn_label, self.rpn_loss_mask
         rois, _, _, rpn_loss_cls, rpn_loss_twin, _, _ = self.RCNN_rpn(base_feat, gt_twins)
-        # if it is training phrase, then use ground truth twins for refining
+
+        # if it is training phase, then use ground truth twins for refining
         if self.training:
             roi_data = self.RCNN_proposal_target(rois, gt_twins)
             rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
@@ -61,16 +69,17 @@ class _TDCNN(nn.Module):
         rois = Variable(rois)
         # do roi pooling based on predicted rois
         if cfg.POOLING_MODE == 'pool':
-            pooled_feat = self.RCNN_roi_temporal_pool(base_feat, rois.view(-1,3))
-            if DEBUG:
-                print("tdcnn.py--pooled_feat.shape1 {}".format(pooled_feat.shape))
-
+            pooled_feat = self.RCNN_roi_temporal_pool(base_feat, rois.view(-1,3))               
+       
+        if cfg.USE_ATTENTION:
+            pooled_feat = self.RCNN_attention(pooled_feat) 
         # feed pooled features to top model
-        pooled_feat = self._head_to_tail(pooled_feat)
-        # compute twin offset
+        pooled_feat = self._head_to_tail(pooled_feat)        
+        # compute twin offset, twin_pred will be (128, 402)
         twin_pred = self.RCNN_twin_pred(pooled_feat)
+
         if self.training:
-            # select the corresponding columns according to roi labels
+            # select the corresponding columns according to roi labels, twin_pred will be (128, 2)
             twin_pred_view = twin_pred.view(twin_pred.size(0), int(twin_pred.size(1) / 2), 2)
             twin_pred_select = torch.gather(twin_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 2))
             twin_pred = twin_pred_select.squeeze(1)
@@ -80,12 +89,12 @@ class _TDCNN(nn.Module):
         cls_prob = F.softmax(cls_score, dim=1)
 
         if DEBUG:
-            print("base_feat.shape {}".format(base_feat.shape))
-            print("tdcnn.py--pooled_feat2.shape {}".format(pooled_feat.shape))
-            #print(pooled_feat.data.cpu().numpy())
+            print("tdcnn.py--base_feat.shape {}".format(base_feat.shape))
+            print("tdcnn.py--rois.shape {}".format(rois.shape))
+            print("tdcnn.py--tdcnn_tail.shape {}".format(pooled_feat.shape))
             print("tdcnn.py--cls_score.shape {}".format(cls_score.shape))
-            #print(cls_score.data.cpu().numpy())
-
+            print("tdcnn.py--twin_pred.shape {}".format(twin_pred.shape))
+            
         RCNN_loss_cls = 0
         RCNN_loss_twin = 0
 
@@ -101,11 +110,14 @@ class _TDCNN(nn.Module):
             rpn_loss_twin = torch.unsqueeze(rpn_loss_twin, 0)
             RCNN_loss_cls = torch.unsqueeze(RCNN_loss_cls, 0)
             RCNN_loss_twin = torch.unsqueeze(RCNN_loss_twin, 0)
-
+            
         cls_prob = cls_prob.view(batch_size, rois.size(1), -1)
         twin_pred = twin_pred.view(batch_size, rois.size(1), -1)
 
-        return rois, cls_prob, twin_pred, rpn_loss_cls, rpn_loss_twin, RCNN_loss_cls, RCNN_loss_twin, rois_label
+        if self.training:        
+            return rois, cls_prob, twin_pred, rpn_loss_cls, rpn_loss_twin, RCNN_loss_cls, RCNN_loss_twin, rois_label
+        else:
+            return rois, cls_prob, twin_pred            
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):

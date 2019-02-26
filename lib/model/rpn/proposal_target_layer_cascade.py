@@ -33,17 +33,18 @@ class _ProposalTargetLayer(nn.Module):
         self.TWIN_INSIDE_WEIGHTS = torch.FloatTensor(cfg.TRAIN.TWIN_INSIDE_WEIGHTS)
 
     def forward(self, all_rois, gt_twins):
-        # GT twins (batch_size, C, 3), each row of gt twin contains (x1, x2, label)
-        self.TWIN_NORMALIZE_MEANS = self.TWIN_NORMALIZE_MEANS.to(gt_twins.device).type_as(gt_twins)
-        self.TWIN_NORMALIZE_STDS = self.TWIN_NORMALIZE_STDS.to(gt_twins.device).type_as(gt_twins)
-        self.TWIN_INSIDE_WEIGHTS = self.TWIN_INSIDE_WEIGHTS.to(gt_twins.device).type_as(gt_twins)
+        # GT twins (batch_size, N, 3), each row of gt twin contains (x1, x2, label)
+        # all_rois (batch_size, K, 3), each row of all_rois contains (video_idx, x1, x2)
+        self.TWIN_NORMALIZE_MEANS = self.TWIN_NORMALIZE_MEANS.type_as(gt_twins)
+        self.TWIN_NORMALIZE_STDS = self.TWIN_NORMALIZE_STDS.type_as(gt_twins)
+        self.TWIN_INSIDE_WEIGHTS = self.TWIN_INSIDE_WEIGHTS.type_as(gt_twins)
 
         gt_twins_append = gt_twins.new(gt_twins.size()).zero_()
         gt_twins_append[:,:,1:3] = gt_twins[:,:,:2]
         
         # Include ground-truth twins in the set of candidate rois
         all_rois = torch.cat([all_rois, gt_twins_append], 1)
-        #print("gt_twins: ", gt_twins.size(), "all_rois: ", all_rois.size())
+        # print("gt_twins: ", gt_twins.size(), "all_rois: ", all_rois.size())
         
         num_videos = 1
         rois_per_video = int(cfg.TRAIN.BATCH_SIZE / num_videos)
@@ -68,7 +69,7 @@ class _ProposalTargetLayer(nn.Module):
 
     def _get_twin_regression_labels_pytorch(self, twin_target_data, labels_batch, num_classes):
         """Bounding-box regression targets (twin_target_data) are stored in a
-        compact form b x N x (class, tx, tl)
+        compact form b x N x (tx, tl)
 
         This function expands those targets into the 2-of-2*K representation used
         by the network (i.e. only one class has non-zero targets).
@@ -120,10 +121,9 @@ class _ProposalTargetLayer(nn.Module):
         """Generate a random sample of RoIs comprising foreground and background
         examples.
         """
-        # overlaps: (rois x gt_twins)
-
+        # assume all_rois(batch_size, N, 3) and gt_wins(batch_size, K, 3), respectively, overlaps will be (batch_size, N, K)
         overlaps = twins_overlaps_batch(all_rois, gt_twins)
-
+        # find max_overlaps for each dt: (batch_size, N)
         max_overlaps, gt_assignment = torch.max(overlaps, 2)
 
         batch_size = overlaps.size(0)
@@ -131,7 +131,7 @@ class _ProposalTargetLayer(nn.Module):
         num_twins_per_video = overlaps.size(2)
 
         offset = torch.arange(0, batch_size)*gt_twins.size(1)
-        offset = offset.view(-1, 1).type_as(gt_assignment).to(gt_assignment.device) + gt_assignment
+        offset = offset.view(-1, 1).type_as(gt_assignment) + gt_assignment
         labels = gt_twins[:,:,2].contiguous().view(-1)[offset.view(-1)].view(batch_size, -1)
 
         labels_batch = labels.new(batch_size, rois_per_video).zero_()

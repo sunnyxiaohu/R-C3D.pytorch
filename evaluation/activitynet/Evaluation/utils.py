@@ -69,7 +69,7 @@ def wrapper_segment_iou(target_segments, candidate_segments):
 
     n, m = candidate_segments.shape[0], target_segments.shape[0]
     tiou = np.empty((n, m))
-    for i in xrange(m):
+    for i in range(m):
         tiou[:, i] = segment_iou(target_segments[i,:], candidate_segments)
 
     return tiou

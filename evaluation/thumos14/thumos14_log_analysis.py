@@ -10,10 +10,12 @@ import numpy as np
 import csv
 import json
 import copy
+import argparse
+import subprocess
 
-assert len(sys.argv) == 2, "Usage: python log_analysis.py <test_log>"
-logfile = sys.argv[1]
-
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+FRAME_DIR = '/media/F/THUMOS14'
+META_DIR = os.path.join(FRAME_DIR, 'annotation_')
 
 def nms(dets, thresh=0.4):
     """Pure Python NMS baseline."""
@@ -35,25 +37,20 @@ def nms(dets, thresh=0.4):
         order = order[inds + 1]
     return keep
 
-FRAME_DIR = '/media/agwang/Data1/action-datasets/THUMOS14'
-META_DIR = os.path.join(FRAME_DIR, 'annotation_')
-
 def generate_classes(meta_dir, split, use_ambiguous=False):
-  class_id = {0: 'Background'}
-  with open(os.path.join(meta_dir, 'detclasslist.txt'), 'r') as f:
-    lines = f.readlines()
-    for l in lines:
-      cname = l.strip().split()[-1]
-      cid = int(l.strip().split()[0])
-      class_id[cid] = cname
-      if use_ambiguous:
-        class_id[21] = 'Ambiguous'
+    class_id = {0: 'Background'}
+    with open(os.path.join(meta_dir, 'detclasslist.txt'), 'r') as f:
+        lines = f.readlines()
+        for l in lines:
+            cname = l.strip().split()[-1]
+            cid = int(l.strip().split()[0])
+            class_id[cid] = cname
+        if use_ambiguous:
+            class_id[21] = 'Ambiguous'
 
-  return class_id
-
-classes = generate_classes(META_DIR+'test', 'test', use_ambiguous=False)
-
-def get_segments(data, thresh):
+    return class_id
+'''
+def get_segments(data, thresh, framerate):
     segments = []
     vid = 'Background'
     find_next = False
@@ -111,25 +108,75 @@ def get_segments(data, thresh):
                      tmp1['segment'] = [left, right]
                      segments.append(tmp1)
 
+'''
+def get_segments(data, thresh, framerate):
+    segments = []
+    vid = 'Background'
+    find_next = False
+    tmp = {'label' : 0, 'score': 0, 'segment': [0, 0]}
+    for l in data:
+        # video name and sliding window length
+        if "fg_name:" in l:
+            vid = l.split('/')[-1]
 
-def analysis_log(logfile, thresh):
-  with open(logfile, 'r') as f:
-    lines = f.read().splitlines()
-  predict_data = []
-  res = {}
-  for l in lines:
-    if "frames :" in l:
-      predict_data = []
-    predict_data.append(l)
-    if "im_detect:" in l:
-      vid, segments = get_segments(predict_data, thresh)
-      if vid not in res:
-        res[vid] = []
-      res[vid] += segments
-  return res
+        # frame index, time, confident score
+        elif "frames:" in l:
+            start_frame=int(l.split()[3])
+            end_frame=int(l.split()[4])
+            stride = int(l.split()[5].split(']')[0])
 
-segmentations = analysis_log(logfile, thresh = 0.005)
+        elif "activity:" in l:
+            label = int(l.split()[1])
+            tmp['label'] = label
+            find_next = True
 
+        elif "im_detect" in l:
+            return vid, segments
+
+        elif find_next:
+            try: 
+                left_frame = float(l.split()[0].split('[')[-1])*stride + start_frame
+                right_frame = float(l.split()[1])*stride + start_frame               
+            except:
+                left_frame = float(l.split()[1])*stride + start_frame
+                right_frame = float(l.split()[2])*stride + start_frame
+
+            try:
+                score = float(l.split()[-1].split(']')[0])                
+            except:
+                score = float(l.split()[-2])    
+                            
+            if (left_frame >= right_frame):
+                print("???", l)
+                continue
+                
+            if right_frame > end_frame:
+                #print("right out", right_frame, end_frame)
+                right_frame = end_frame
+                                
+            left  = left_frame / framerate
+            right = right_frame / framerate                
+            if score > thresh:
+                tmp1 = copy.deepcopy(tmp)
+                tmp1['score'] = score
+                tmp1['segment'] = [left, right]
+                segments.append(tmp1)
+                
+def analysis_log(logfile, thresh, framerate):
+    with open(logfile, 'r') as f:
+        lines = f.read().splitlines()
+    predict_data = []
+    res = {}
+    for l in lines:
+        if "frames:" in l:
+            predict_data = []
+        predict_data.append(l)
+        if "im_detect:" in l:
+            vid, segments = get_segments(predict_data, thresh, framerate)
+            if vid not in res:
+                res[vid] = []
+            res[vid] += segments
+    return res
 
 def select_top(segmentations, nms_thresh=0.99999, num_cls=0, topk=0):
   res = {}
@@ -159,7 +206,18 @@ def select_top(segmentations, nms_thresh=0.99999, num_cls=0, topk=0):
     res[vid] = [res_nms[id] for id in sortid]
   return res
 
-segmentations = select_top(segmentations, nms_thresh=0.4, topk=200)
+parser = argparse.ArgumentParser(description="log analysis.py")
+parser.add_argument('log_file', type=str, help="test log file path")
+parser.add_argument('--framerate', type=int, help="frame rate of videos extract by ffmpeg")
+parser.add_argument('--thresh', type=float, default=0.005, help="filter those dets low than the thresh, default=0.0005")
+parser.add_argument('--nms_thresh', type=float, default=0.4, help="nms thresh, default=0.3")
+parser.add_argument('--topk', type=int, default=200, help="select topk dets, default=200")
+parser.add_argument('--num_cls', type=int, default=0, help="select most likely classes, default=0")  
+
+args = parser.parse_args()
+classes = generate_classes(META_DIR+'test', 'test', use_ambiguous=False)
+segmentations = analysis_log(args.log_file, thresh = args.thresh, framerate=args.framerate)
+segmentations = select_top(segmentations, nms_thresh=args.nms_thresh, num_cls=args.num_cls, topk=args.topk)
 
 
 res = {'version': 'VERSION 1.3', 
@@ -168,11 +226,25 @@ res = {'version': 'VERSION 1.3',
 for vid, vinfo in segmentations.items():
   res['results'][vid] = vinfo
 
-
-with open('results.json', 'w') as outfile:
-  json.dump(res, outfile)
+#with open('results.json', 'w') as outfile:
+#  json.dump(res, outfile)
 
 with open('tmp.txt', 'w') as outfile:
   for vid, vinfo in segmentations.items():
     for seg in vinfo:
       outfile.write("{} {} {} {} {}\n".format(vid, seg['segment'][0], seg['segment'][1], int(seg['label']) ,seg['score']))
+      
+      
+def matlab_eval():
+    print('Computing results with the official Matlab eval code')
+    path = os.path.join(THIS_DIR, 'Evaluation')
+    cmd = 'cp tmp.txt {} && '.format(THIS_DIR)
+    cmd += 'cd {} && '.format(path)
+    cmd += 'matlab -nodisplay -nodesktop '
+    cmd += '-r "dbstop if error; '
+    cmd += 'eval_thumos14(); quit;"'
+    
+    print('Runing: \n {}'.format(cmd))
+    status = subprocess.call(cmd, shell=True)
+    
+matlab_eval()

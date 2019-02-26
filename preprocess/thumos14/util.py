@@ -9,14 +9,13 @@ import subprocess
 import shutil
 import os, errno
 import cv2
-import scipy.io
+#import scipy.io
 import glob
 from collections import defaultdict
-import h5py
 import shutil
 import math
-from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
+#from sklearn.cluster import KMeans
+#import matplotlib.pyplot as plt
 import numpy as np
 
 def dataset_label_parser(meta_dir, split, use_ambiguous=False):
