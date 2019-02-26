@@ -6,7 +6,7 @@ The [old branch](https://github.com/sunnyxiaohu/R-C3D.pytorch/tree/201810) is wi
 
 ## Introduction
 
-This project is a *faster* pytorch implementation of R-C3D, aimed to accelerating the training of R-C3D object detection models. 
+This project is a *faster* pytorch implementation of R-C3D, aimed to accelerating the training of R-C3D temporal action detection models. 
 During our implementing, we referred the below implementations: 
 * [jwyang/faster-rcnn.pytorch](https://github.com/jwyang/faster-rcnn.pytorch.git), developed based on Pytorch + TensorFlow + Numpy
 
@@ -18,7 +18,7 @@ Our implementation has several unique and new features compared with the above i
 
 * **It supports parallel training**. We use a multiple GPU wrapper (nn.DataParallel here) to make it flexible to use one or more GPUs, with batch size equal or bigger than 1.
 * **It supports parallel test**. We use a multiple GPU wrapper (nn.DataParallel here) to make it flexible to use one or more GPUs, with batch size equal or bigger than 1. 
-* **It is memory efficient**. We can train 3dresnet-18 and with batchsize = 3 (3 video buffer, buffer length=768) on a sigle 1080Ti (11 GB). When training with 8 GPU, the maximum batchsize for each GPU is 3 (Res101), totally 24.
+* **It is memory efficient**. We can train 3dresnet-18 and with batchsize = 3 (3 video buffer, buffer length=768) on a sigle 1080Ti (11 GB). When training with 8 GPU, the maximum batchsize for each GPU is 3 (Res18), totally 24.
 * **It supports roibatchLoader for training and test**. The training and test process can use the the roibatchLoader.
 * **It is faster**. Based on the above modifications, the training is much faster. We report the training speed on 1080Ti in the tables below.
 
@@ -73,7 +73,7 @@ cd R-C3D.pytorch && mkdir data
 ### Data Preparation
 
 * **THUOMS14**: 
-1. Download the data. Please follow the instructions in
+1. Download the data.
 2. Extract the video frames.
 ```
 cd ./preprocess/thumos14
@@ -161,7 +161,7 @@ Change network to "res34" or "res18" if you want to use 3d-resnet34 network or 3
 
 ## Test
 
-If you want to evlauate the detection performance of a c3d model on thumos14 test set, simply run
+If you want to evaluate the detection performance of a c3d model on thumos14 test set, simply run
 ```
 CUDA_VISIBLE_DEVICES=$GPU_ID ./script_test c3d thumos14 
                    --gpus 0 1 2 3 --bs 4 \
