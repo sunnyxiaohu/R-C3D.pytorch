@@ -89,7 +89,7 @@ int roi_temporal_pooling_forward(int pooled_length, int pooled_height, int poole
                     wstart = fminf(fmaxf(wstart + roi_start_w, 0), data_width);
                     wend = fminf(fmaxf(wend + roi_start_w, 0), data_width);
 
-                    const int pool_index = index_output + ((pl * pooled_length + ph) * pooled_width + pw);
+                    const int pool_index = index_output + ((pl * pooled_height + ph) * pooled_width + pw);
                     int is_empty = (lend <= lstart) || (hend <= hstart) || (wend <= wstart);
                     if (is_empty)
                     {
@@ -109,7 +109,7 @@ int roi_temporal_pooling_forward(int pooled_length, int pooled_height, int poole
                                 {
                                     for (c = 0; c < num_channels; ++c)
                                     {
-                                        const int index =((l * data_length + h) * data_width + w) * num_channels + c;
+                                        const int index =((l * data_height + h) * data_width + w) * num_channels + c;
                                         if (data_flat[index_data + index] > output_flat[pool_index + c * output_area])
                                         {
                                             output_flat[pool_index + c * output_area] = data_flat[index_data + index];
