@@ -1,21 +1,47 @@
-# --------------------------------------------------------
-# Fast R-CNN
-# Copyright (c) 2015 Microsoft
-# Licensed under The MIT License [see LICENSE for details]
-# Written by Ross Girshick
-# --------------------------------------------------------
+import numpy as np
 import torch
-from model.utils.config import cfg
-if torch.cuda.is_available():
-    from model.nms.nms_gpu import nms_gpu
-from model.nms.nms_cpu import nms_cpu
 
-def nms(dets, thresh, force_cpu=False):
-    """Dispatch to either CPU or GPU NMS implementations."""
-    if dets.shape[0] == 0:
-        return []
-    # ---numpy version---
-    # original: return gpu_nms(dets, thresh, device_id=cfg.GPU_ID)
-    # ---pytorch version---
+from . import nms_cuda, nms_cpu
+#from .soft_nms_cpu import soft_nms_cpu
 
-    return nms_gpu(dets, thresh) if force_cpu == False else nms_cpu(dets, thresh)
+
+def nms(dets, iou_thr, device_id=None):
+    """Dispatch to either CPU or GPU NMS implementations.
+    The input can be either a torch tensor or numpy array. GPU NMS will be used
+    if the input is a gpu tensor or device_id is specified, otherwise CPU NMS
+    will be used. The returned type will always be the same as inputs.
+    Arguments:
+        dets (torch.Tensor or np.ndarray): bboxes with scores.
+        iou_thr (float): IoU threshold for NMS.
+        device_id (int, optional): when `dets` is a numpy array, if `device_id`
+            is None, then cpu nms is used, otherwise gpu_nms will be used.
+    Returns:
+        tuple: kept bboxes and indice, which is always the same data type as
+            the input.
+    """
+    # convert dets (tensor or numpy array) to tensor
+    if isinstance(dets, torch.Tensor):
+        is_numpy = False
+        dets_th = dets
+    elif isinstance(dets, np.ndarray):
+        is_numpy = True
+        device = 'cpu' if device_id is None else 'cuda:{}'.format(device_id)
+        dets_th = torch.from_numpy(dets).to(device)
+    else:
+        raise TypeError(
+            'dets must be either a Tensor or numpy array, but got {}'.format(
+                type(dets)))
+
+    # execute cpu or cuda nms
+    if dets_th.shape[0] == 0:
+        inds = dets_th.new_zeros(0, dtype=torch.long)
+    else:
+        if dets_th.is_cuda:
+            inds = nms_cuda.nms(dets_th, iou_thr)
+        else:
+            inds = nms_cpu.nms(dets_th, iou_thr)
+
+    if is_numpy:
+        inds = inds.cpu().numpy()
+    return dets[inds, :], inds
+
