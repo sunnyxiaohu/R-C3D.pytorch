@@ -29,7 +29,7 @@
 int const threadsPerBlock = sizeof(unsigned long long) * 8;
 
 __device__ inline float devIoU(float const * const a, float const * const b) {
-  float left = max(a[0], b[0]), right = min(a[2], b[2]);
+  float left = max(a[0], b[0]), right = min(a[1], b[1]);
   float interS = max(right - left + 1, 0.f);
   float Sa = (a[1] - a[0] + 1);
   float Sb = (b[1] - b[0] + 1);
