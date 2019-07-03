@@ -14,7 +14,7 @@ import argparse
 import subprocess
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-FRAME_DIR = '/media/F/THUMOS14'
+FRAME_DIR = '/mnt/lustre/wangshiguang/datasets/THUMOS14'
 META_DIR = os.path.join(FRAME_DIR, 'annotation_')
 
 def nms(dets, thresh=0.4):

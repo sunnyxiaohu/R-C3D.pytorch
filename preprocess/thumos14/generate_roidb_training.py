@@ -23,7 +23,7 @@ min_length = 3
 overlap_thresh = 0.7
 STEP = LENGTH / 4
 WINS = [LENGTH * 1]
-FRAME_DIR = '/media/F/THUMOS14'
+FRAME_DIR = '/mnt/lustre/wangshiguang/datasets/THUMOS14'
 META_DIR = os.path.join(FRAME_DIR, 'annotation_')
 
 print ('Generate Training Segments')

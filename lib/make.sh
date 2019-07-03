@@ -20,3 +20,10 @@ if [ -d "build" ]; then
 fi
 python setup.py build_ext --inplace
 
+# compile roi_temporal_pool
+echo "Building roi_temporal_pool"
+cd ../roi_temporal_pool
+if [ -d "build" ]; then
+    rm -r build
+fi
+python setup.py build_ext --inplace

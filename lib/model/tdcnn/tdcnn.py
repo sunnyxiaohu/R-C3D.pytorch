@@ -8,7 +8,7 @@ from torch.autograd import Variable
 import numpy as np
 from model.utils.config import cfg
 from model.rpn.rpn import _RPN
-from model.roi_temporal_pooling.modules.roi_temporal_pool import _RoITemporalPooling
+from model.roi_temporal_pool import RoITemporalPool
 from model.rpn.proposal_target_layer_cascade import _ProposalTargetLayer
 import time
 import pdb
@@ -30,7 +30,7 @@ class _TDCNN(nn.Module):
         # define rpn
         self.RCNN_rpn = _RPN(self.dout_base_model)
         self.RCNN_proposal_target = _ProposalTargetLayer(self.n_classes)
-        self.RCNN_roi_temporal_pool = _RoITemporalPooling(cfg.POOLING_LENGTH, cfg.POOLING_HEIGHT, cfg.POOLING_WIDTH, cfg.DEDUP_TWINS)
+        self.RCNN_roi_temporal_pool = RoITemporalPool((cfg.POOLING_LENGTH, cfg.POOLING_HEIGHT, cfg.POOLING_WIDTH), cfg.DEDUP_TWINS)
         if cfg.USE_ATTENTION:
             self.RCNN_attention = NONLocalBlock3D(self.dout_base_model, inter_channels=self.dout_base_model)
         
