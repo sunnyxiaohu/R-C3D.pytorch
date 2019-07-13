@@ -20,7 +20,10 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 import torchvision.transforms as transforms
-from torch.utils.data.sampler import Sampler
+from torch.utils.data.sampler import Sampler, RandomSampler
+from torch.utils.data.distributed import DistributedSampler
+from model.utils.dist_utils import dist_init, average_gradients, DistModule, get_world_size
+import torch.distributed as dist
 
 from roi_data_layer.roibatchLoader import roibatchLoader
 from model.utils.config import cfg, cfg_from_file, cfg_from_list, get_output_dir
@@ -88,6 +91,9 @@ def parse_args():
     parser.add_argument('--use_tfboard',default=False, action='store_true',
                       help='whether use tensorflow tensorboard')
 
+    parser.add_argument('--dist', default=False, action='store_true',
+                      help='whether use dist training')
+
     args = parser.parse_args()
     return args
 
@@ -122,6 +128,13 @@ def get_roidb(path):
     return data
 
 def train_net(tdcnn_demo, dataloader, optimizer, args):
+    if args.dist:
+        world_size = dist.get_world_size()
+        rank = dist.get_rank()
+    else:
+        world_size = 1
+        rank = 0
+
     # setting to train mode
     tdcnn_demo.train()
     loss_temp = 0
@@ -138,19 +151,28 @@ def train_net(tdcnn_demo, dataloader, optimizer, args):
         RCNN_loss_cls, RCNN_loss_twin, rois_label = tdcnn_demo(video_data, gt_twins)
         loss = rpn_loss_cls.mean() + rpn_loss_twin.mean() \
            + RCNN_loss_cls.mean() + RCNN_loss_twin.mean()          
-        loss_temp += loss.item()
+
+        loss = loss / world_size
+        reduced_loss = loss.data.clone()
+        if args.dist:
+            dist.all_reduce(reduced_loss)
+
+        loss_temp += reduced_loss.item()
 
         # backward
         optimizer.zero_grad()
         loss.backward()
+        if args.dist:
+            average_gradients(tdcnn_demo)
         # if args.net == "vgg16": clip_gradient(tdcnn_demo, 100.)
         optimizer.step()
 
-        if step % args.disp_interval == 0:
+        if step % args.disp_interval == 0 and rank == 0:
             end = time.time()
             if step > 0:
                 loss_temp /= args.disp_interval
 
+            # approximately use rank
             loss_rpn_cls = rpn_loss_cls.mean().item()
             loss_rpn_twin = rpn_loss_twin.mean().item()
             loss_rcnn_cls = RCNN_loss_cls.mean().item()
@@ -185,8 +207,16 @@ def train_net(tdcnn_demo, dataloader, optimizer, args):
 if __name__ == '__main__':
     args = parse_args()
 
-    print('Called with args:')
-    print(args)
+    # adaptively use dist or not
+    if args.dist:
+        rank, world_size = dist_init('12345')
+    else:
+        rank = 0
+        world_size = 1
+
+    if rank == 0:
+        print('Called with args:')
+        print(args)
 
     if args.use_tfboard:
         from model.utils.logger import Logger
@@ -216,8 +246,10 @@ if __name__ == '__main__':
     if args.set_cfgs is not None:
         cfg_from_list(args.set_cfgs)
 
-    print('Using config:')
-    pprint.pprint(cfg)
+    if rank == 0:
+        print('Using config:')
+        pprint.pprint(cfg)
+
 
     # for reproduce
     np.random.seed(cfg.RNG_SEED)
@@ -231,7 +263,8 @@ if __name__ == '__main__':
     roidb_path = args.roidb_dir + "/" + args.dataset + "/" + args.imdb_name
     roidb = get_roidb(roidb_path)
 
-    print('{:d} roidb entries'.format(len(roidb)))
+    if rank == 0:
+        print('{:d} roidb entries'.format(len(roidb)))
 
     model_dir = args.save_dir + "/" + args.net + "/" + args.dataset
     if not os.path.exists(model_dir):
@@ -242,8 +275,10 @@ if __name__ == '__main__':
         
     #sampler_batch = sampler(train_size, args.batch_size)
     dataset = roibatchLoader(roidb)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size,
-                             num_workers=args.num_workers, shuffle=True)
+    sampler = RandomSampler(dataset)
+    if args.dist:
+        sampler = DistributedSampler(dataset)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, sampler=sampler, num_workers=args.num_workers, shuffle=False)
       
     # initilize the network here.
     if args.net == 'c3d':
@@ -260,12 +295,14 @@ if __name__ == '__main__':
         print("network is not defined")
 
     tdcnn_demo.create_architecture()
-    print(tdcnn_demo)
+
+    if rank == 0:
+        print(tdcnn_demo)
 
     params = []
     for key, value in dict(tdcnn_demo.named_parameters()).items():
         if value.requires_grad:
-            print(key)
+            #print(key)
             if 'bias' in key:
                 params += [{'params':[value],'lr': args.lr*(cfg.TRAIN.DOUBLE_BIAS + 1), \
                     'weight_decay': cfg.TRAIN.BIAS_DECAY and cfg.TRAIN.WEIGHT_DECAY or 0}]
@@ -297,9 +334,15 @@ if __name__ == '__main__':
         tdcnn_demo = tdcnn_demo.cuda()
         if isinstance(args.gpus, int):
             args.gpus = [args.gpus]
-        tdcnn_demo = nn.parallel.DataParallel(tdcnn_demo, device_ids = args.gpus)
+        if args.dist:
+            args.gpus = [world_size]
+            tdcnn_demo = DistModule(tdcnn_demo)
+        else:
+            tdcnn_demo = nn.parallel.DataParallel(tdcnn_demo, device_ids = args.gpus)
 
     for epoch in range(args.start_epoch, args.max_epochs + 1):
+        dataloader.sampler.set_epoch = epoch
+
         if epoch % (args.lr_decay_step + 1) == 0:
             adjust_learning_rate(optimizer, args.lr_decay_gamma)
             args.lr *= args.lr_decay_gamma
@@ -307,22 +350,23 @@ if __name__ == '__main__':
         args.epoch = epoch
         train_net(tdcnn_demo, dataloader, optimizer, args)
 
-        if len(args.gpus) > 1:
-            save_name = os.path.join(model_dir, 'tdcnn_{}_{}_{}.pth'.format(args.session, epoch, len(dataloader)))
-            save_checkpoint({
-                'session': args.session,
-                'epoch': epoch,
-                'model': tdcnn_demo.module.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'pooling_mode': cfg.POOLING_MODE
-            }, save_name)
-        else:
-            save_name = os.path.join(model_dir, 'tdcnn_{}_{}_{}.pth'.format(args.session, epoch, len(dataloader)))
-            save_checkpoint({
-                'session': args.session,
-                'epoch': epoch,
-                'model': tdcnn_demo.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'pooling_mode': cfg.POOLING_MODE
-            }, save_name)
-        print('save model: {}'.format(save_name))
+        if rank == 0:
+            if len(args.gpus) > 1:
+                save_name = os.path.join(model_dir, 'tdcnn_{}_{}_{}.pth'.format(args.session, epoch, len(dataloader)))
+                save_checkpoint({
+                    'session': args.session,
+                    'epoch': epoch,
+                    'model': tdcnn_demo.module.state_dict(),
+                    'optimizer': optimizer.state_dict(),
+                    'pooling_mode': cfg.POOLING_MODE
+                }, save_name)
+            else:
+                save_name = os.path.join(model_dir, 'tdcnn_{}_{}_{}.pth'.format(args.session, epoch, len(dataloader)))
+                save_checkpoint({
+                    'session': args.session,
+                    'epoch': epoch,
+                    'model': tdcnn_demo.state_dict(),
+                    'optimizer': optimizer.state_dict(),
+                    'pooling_mode': cfg.POOLING_MODE
+                }, save_name)
+            print('save model: {}'.format(save_name))

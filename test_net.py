@@ -152,7 +152,7 @@ def test_net(tdcnn_demo, dataloader, args):
                     cls_dets = torch.cat((cls_twins, cls_scores.unsqueeze(1)), 1)
                     # cls_dets = torch.cat((cls_twins, cls_scores), 1)
                     cls_dets = cls_dets[order]
-                    keep = nms(cls_dets, cfg.TEST.NMS)
+                    keep = nms(cls_dets, cfg.TEST.NMS)[1]
                     if ( len(keep)>0 ):
                           cls_dets = cls_dets[keep.view(-1).long()]
                           print ("activity: ", j)
@@ -267,8 +267,9 @@ if __name__ == '__main__':
 #        tdcnn_demo = nn.parallel.DataParallel(tdcnn_demo, device_ids = args.gpus)
 
     print("load checkpoint %s" % (load_name))
-    checkpoint = torch.load(load_name)
-    tdcnn_demo.load_state_dict(checkpoint['model'])
+    checkpoint = torch.load(load_name) ###TODO remove 'module.' prefix
+    fixed_param = {x[7:] : v for x, v in checkpoint['model'].items()}
+    tdcnn_demo.load_state_dict(fixed_param)
     if 'pooling_mode' in checkpoint.keys():
         cfg.POOLING_MODE = checkpoint['pooling_mode']
         print('load model successfully!')

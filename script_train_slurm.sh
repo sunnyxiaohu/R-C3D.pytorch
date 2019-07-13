@@ -2,7 +2,7 @@
 set -x
 NET_DIR=$1
 DATASET=$2
-GPUS=2
+GPUS=8
 array=( $@ )
 len=${#array[@]}
 EXTRA_ARGS=${array[@]:2:$len}
@@ -14,7 +14,7 @@ exec &> >(tee -a "$LOG")
 echo Logging output to "$LOG"
 
 srun -p Platform \
-     --job-name=${NET_DIR}_${DATASET} \
+     --job-name=train_${NET_DIR}_${DATASET} \
      --gres=gpu:${GPUS} \
      --ntasks=${GPUS} \
      --ntasks-per-node=${GPUS} \
@@ -22,6 +22,7 @@ srun -p Platform \
 python ./trainval_net.py \
   --net ${NET_DIR} \
   --dataset ${DATASET} \
+  --dist \
   ${EXTRA_ARGS}
   
 #2>&1 | tee $LOG
