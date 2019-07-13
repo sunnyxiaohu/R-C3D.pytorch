@@ -26,9 +26,8 @@ Our implementation has several unique and new features compared with the above i
 
 We benchmark our code thoroughly on two action detection datasets: [Activitynet-v1.3](http://activity-net.org/) val subset, [THUMOS14](http://crcv.ucf.edu/THUMOS14/), using two different network architecture: C3D and [3d-resnet](https://github.com/kenshohara/3D-ResNets-PyTorch.git). Below are the results:
 ### Note!!!
-The prev URLs of benchmark and pretrained models are not working anymore, we provide they here:
+The prev URLs of benchmark are not working anymore, we provide they here:
 the benckmark models: [trained models](https://stduestceducn-my.sharepoint.com/:f:/g/personal/wangshiguang_std_uestc_edu_cn/Eom87B7Kv5BJi2RxIjdWTcYBE-W86FoJKHFZ06Fx1w2AJw?e=PSMYSy)
-the pretrained models: [pretrained models](https://stduestceducn-my.sharepoint.com/:f:/g/personal/wangshiguang_std_uestc_edu_cn/EnGrfGdKoe1Ak0MX_qW5kPMBLuR3v1wnNr3DSGMdd5_MLg?e=aapzH4)
 
 1). THUMOS14 (buffer length=768; pooled_lhw=4,2,2; anchor scales=2,4,5,6,8,9,10,12,14,16; fixed the 2 bottom layers)
 
@@ -102,13 +101,16 @@ python generate_roidb_training.py
 python generate_roidb_validation.py
 ```
 ### Pretrained Model
+####Note!!!
+The prev URLs of pretrained models are not working anymore, we provide they here:
+the pretrained models: [pretrained models](https://stduestceducn-my.sharepoint.com/:f:/g/personal/wangshiguang_std_uestc_edu_cn/EnGrfGdKoe1Ak0MX_qW5kPMBLuR3v1wnNr3DSGMdd5_MLg?e=aapzH4)
 
 We used two pretrained models in our experiments, VGG and ResNet101. You can download these two models from:
-* C3D-pretrained on Sports1M: [OneDrive](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EY6MiTbnIjFKmAZBv8phHsEBW0XEd6PT5F2GMKVF9ttuXA?e=KEqkWR) and [BaiduYun](https://pan.baidu.com/s/1saNqGBkzZHwZpG-A5RDLVw)
-* C3D-pretrained on ActivityNet: [OneDrive](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EYkuRfVANqtHiTu5Y92vN2MBo-HEgkW3X5DwBCR99h4sYA?e=fgSxqy)
-* 3d-resnet18 pretrained on Kinetics: [OneDrive](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EU8I47N1UVRLpYa15gfoYnkBvcnZq-Q44P9Sl2qhDKT3NA?e=pG1MWp)
-* 3d-resnet34 pretrained on Kinetics: [OneDrive](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EbOI3QS9il5Olw0eJgZEhk0BYHHd623AL2GCHc6Rk9RpOQ?e=KsrVv4)
-* 3d-resnet50 pretrained on Kinetics: [OneDrive](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EXxvgN6ncjpOgcGnKkhc71sBssvSlY7OSxow-vHnN4svHg?e=V41C4D)
+* C3D-pretrained on Sports1M: ~~[OneDrive](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EY6MiTbnIjFKmAZBv8phHsEBW0XEd6PT5F2GMKVF9ttuXA?e=KEqkWR) and [BaiduYun](https://pan.baidu.com/s/1saNqGBkzZHwZpG-A5RDLVw)~~
+* C3D-pretrained on ActivityNet: ~~[OneDrive](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EYkuRfVANqtHiTu5Y92vN2MBo-HEgkW3X5DwBCR99h4sYA?e=fgSxqy)~~
+* 3d-resnet18 pretrained on Kinetics: ~~[OneDrive](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EU8I47N1UVRLpYa15gfoYnkBvcnZq-Q44P9Sl2qhDKT3NA?e=pG1MWp)~~
+* 3d-resnet34 pretrained on Kinetics: ~~[OneDrive](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EbOI3QS9il5Olw0eJgZEhk0BYHHd623AL2GCHc6Rk9RpOQ?e=KsrVv4)~~
+* 3d-resnet50 pretrained on Kinetics: ~~[OneDrive](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EXxvgN6ncjpOgcGnKkhc71sBssvSlY7OSxow-vHnN4svHg?e=V41C4D)~~
 Download them and put them into the data/pretrained_model/.
 
 **NOTE**. We would suggest to use Caffe pretrained models from the above link to reproduce our results.
