@@ -25,13 +25,17 @@ Our implementation has several unique and new features compared with the above i
 ## Benchmarking
 
 We benchmark our code thoroughly on two action detection datasets: [Activitynet-v1.3](http://activity-net.org/) val subset, [THUMOS14](http://crcv.ucf.edu/THUMOS14/), using two different network architecture: C3D and [3d-resnet](https://github.com/kenshohara/3D-ResNets-PyTorch.git). Below are the results:
+### Note!!!
+The prev URLs of benchmark and pretrained models are not working anymore, we provide they here:
+the benckmark models: [trained models](https://stduestceducn-my.sharepoint.com/:f:/g/personal/wangshiguang_std_uestc_edu_cn/Eom87B7Kv5BJi2RxIjdWTcYBE-W86FoJKHFZ06Fx1w2AJw?e=PSMYSy)
+the pretrained models: [pretrained models](https://stduestceducn-my.sharepoint.com/:f:/g/personal/wangshiguang_std_uestc_edu_cn/EnGrfGdKoe1Ak0MX_qW5kPMBLuR3v1wnNr3DSGMdd5_MLg?e=aapzH4)
 
 1). THUMOS14 (buffer length=768; pooled_lhw=4,2,2; anchor scales=2,4,5,6,8,9,10,12,14,16; fixed the 2 bottom layers)
 
 model    | #GPUs | batch size | lr        | lr_decay | max_epoch     |  time/epoch | mem/GPU | mAP(IoU thresh=0.5)
 ---------|--------|-----|--------|-----|-----|-------|--------|-----
 R-C3D published paper   | 1 | 1 | 1e-4 | | | 4.95 hr | ~700MB | 28.9
-[C3D](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/Efp9ps9rdvlCj6Ozk_878NUBl2MlbUU2wp-9SB2mieyOOw?e=bHYJhv)     | 2 | 2 | 1e-4 | 3   | 5   |  2.97 hr | 600MB   | 38.5
+[C3D](~~https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/Efp9ps9rdvlCj6Ozk_878NUBl2MlbUU2wp-9SB2mieyOOw?e=bHYJhv~~)     | 2 | 2 | 1e-4 | 3   | 5   |  2.97 hr | 600MB   | 38.5
 
 
 2). Activitynet-v1.3 (buffer length=768; pooled_lhw=4,2,2 for c3d, pooled_lhw=16,4,4 for 3d-resnet; anchor scales=1,1.25, 1.5,1.75, 2,2.5, 3,3.5, 4,4.5, 5,5.5, 6,7, 8,9,10,11,12,14,16,18,20,22,24,28,32,36,40,44,52,60,68,76,84,92,100;)
@@ -39,10 +43,10 @@ R-C3D published paper   | 1 | 1 | 1e-4 | | | 4.95 hr | ~700MB | 28.9
 model    | #GPUs | batch size | lr        | lr_decay | max_epoch     |  time/epoch | mem/GPU | mAP(IoU thresh=0.5) | Average mAP(IoU thresh=0.5:0.05:0.95) 
 ---------|--------|-----|--------|-----|-----|-------|--------|-----|-----
 R-C3D published paper   | 1 | 1 | 1e-4 | | | 4.95 hr | ~700MB | 26.45 | 13.33
-[C3D](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EefOfbXO0M5EsDZjQsmA9LsBAoOKpDPeuFmXj-exlS0HKQ?e=PZla3F)     | 4 | 4 | 1e-4 | 6   | 8   |  2.97 hr | 600MB   | 28.8 | 15.1
-[3d-resnet18](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EZQhlbLdTRZJtSIQacDtMgcBgQ8Uk3zDM4Uf2mY8unMxUQ?e=8DMeOw)     | 4 | 4 | 1e-4 | 6   | 8   |  1.29 hr | 255MB   | 26.2 | 14.2
-[3d-resnet34](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/ERjmmLCBYuBDmF0c3wDuhOgBtwfxQSiVY2zzpNRhulqMUA?e=UZhSt4)     | 4 | 4 | 1e-4 | 8   | 10   |  1.75 hr | 285MB   | 28.8 | 15.5
-[3d-resnet50](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EX3MPCQQFNZNkKiI9_NU44oBu16JyerS7bYxRFTB2131Ww?e=Tenwv9)     | 4 | 4 | 1e-4 | 8   | 10   |  2.06 hr | ~800MB   | 30.4 | 16.6
+[C3D](~~https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EefOfbXO0M5EsDZjQsmA9LsBAoOKpDPeuFmXj-exlS0HKQ?e=PZla3F~~)     | 4 | 4 | 1e-4 | 6   | 8   |  2.97 hr | 600MB   | 28.8 | 15.1
+[3d-resnet18](~~https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EZQhlbLdTRZJtSIQacDtMgcBgQ8Uk3zDM4Uf2mY8unMxUQ?e=8DMeOw~~)     | 4 | 4 | 1e-4 | 6   | 8   |  1.29 hr | 255MB   | 26.2 | 14.2
+[3d-resnet34](~~https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/ERjmmLCBYuBDmF0c3wDuhOgBtwfxQSiVY2zzpNRhulqMUA?e=UZhSt4~~)     | 4 | 4 | 1e-4 | 8   | 10   |  1.75 hr | 285MB   | 28.8 | 15.5
+[3d-resnet50](~~https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EX3MPCQQFNZNkKiI9_NU44oBu16JyerS7bYxRFTB2131Ww?e=Tenwv9~~)     | 4 | 4 | 1e-4 | 8   | 10   |  2.06 hr | ~800MB   | 30.4 | 16.6
 
 ### What we are going to do
 - [x] Support pytorch-0.4.0.
