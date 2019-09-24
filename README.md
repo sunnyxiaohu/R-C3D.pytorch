@@ -45,7 +45,7 @@ R-C3D published paper   | 1 | 1 | 1e-4 | | | 4.95 hr | ~700MB | 26.45 | 13.33
 [3d-resnet50](https://stduestceducn-my.sharepoint.com/:u:/g/personal/wangshiguang_std_uestc_edu_cn/EX3MPCQQFNZNkKiI9_NU44oBu16JyerS7bYxRFTB2131Ww?e=Tenwv9)     | 4 | 4 | 1e-4 | 8   | 10   |  2.06 hr | ~800MB   | 30.4 | 16.6
 
 ### What we are going to do
-- [x] Support pytorch-0.4.0.
+- [x] Support pytorch-1.1.0.
 - [x] Run systematical experiments on ActivityNet and THUMOS14
 - [ ] Add other main network support (eco, i3d, resnet-3d)
 - [ ] ~~Write a detailed report about the new stuffs in our implementations, and the quantitative results in our experiments.~~
