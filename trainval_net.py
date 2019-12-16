@@ -22,7 +22,6 @@ import torch.backends.cudnn as cudnn
 import torchvision.transforms as transforms
 from torch.utils.data.sampler import Sampler, RandomSampler
 from torch.utils.data.distributed import DistributedSampler
-from model.utils.dist_utils import dist_init, average_gradients, DistModule, get_world_size
 import torch.distributed as dist
 
 from roi_data_layer.roibatchLoader import roibatchLoader
@@ -206,6 +205,9 @@ def train_net(tdcnn_demo, dataloader, optimizer, args):
     
 if __name__ == '__main__':
     args = parse_args()
+
+    if args.dist:
+        from model.utils.dist_utils import dist_init, average_gradients, DistModule
 
     # adaptively use dist or not
     if args.dist:
